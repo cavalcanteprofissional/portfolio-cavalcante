@@ -96,6 +96,12 @@ export const translations = {
       metrics: { sources: "3 fontes", steps: "12 etapas", speed: "< 2s" },
     },
     acessibilidade: { skipToContent: "Pular para o conteúdo", scrollToTop: "Voltar ao topo", navAria: "Navegação principal" },
+    marketingNav: { home: "Início", about: "Sobre", tools: "Ferramentas", cases: "Cases", contact: "Contato" },
+    marketingHero: { name: "Lucas Cavalcante", title: "Estratégia Digital & Marketing Analytics", description: "Analista de Dados com expertise em marketing digital, automação e inteligência de mercado. Transformo dados em campanhas de alto desempenho — da análise de audiência à otimização de conversão." },
+    marketingAbout: { title: "Marketing Orientado por Dados", description: "Com formação em Ciência de Dados e experiência prática em SEO/SEM, mídias pagas e análise de campanhas, conecta a análise técnica à estratégia de negócios. Cada decisão de marketing é baseada em dados, testada e otimizada continuamente." },
+    marketingTools: { title: "Ferramentas & Competências", subtitle: "O que uso para gerar resultados", item0: "Google Analytics & Tag Manager", item1: "Meta Ads & Google Ads", item2: "SEO & SEM", item3: "Copywriting & Conteúdo", item4: "CRM & Automação", item5: "Power BI & Dashboards" },
+    marketingCases: { title: "Cases & Resultados", subtitle: "Exemplos representativos de campanhas e projetos", case0: { title: "Campanha de Lançamento — E-commerce", metric: "+ 340% de conversão", description: "Estratégia multicanal com segmentação comportamental, testes A/B e otimização de landing page. Alcance de 150 mil usuários em 4 semanas." }, case1: { title: "Otimização SEO — Portal Institucional", metric: "Top 3 Google em 60 dias", description: "Reestruturação de conteúdo, link building e técnicas de SEO on-page para 30 palavras-chave de alto valor no setor industrial." }, case2: { title: "Automação de Campanhas — CRM + E-mail", metric: "ROI de 480%", description: "Pipeline automatizado de nutrição de leads com segmentação dinâmica, disparo inteligente e análise de taxa de abertura/conversão." } },
+    marketingContact: { title: "Vamos Criar Algo Impactante?", subtitle: "Sua próxima campanha pode ser a melhor do mercado. Vamos conversar." },
   },
   en: {
     nav: { home: "Home", showcase: "Showcase", experience: "Experience", portfolio: "Projects", skills: "Skills", certifications: "Certifications", languages: "Languages", menu: "Menu", swipeToClose: "Swipe to close" },
@@ -191,6 +197,12 @@ export const translations = {
       metrics: { sources: "3 sources", steps: "12 steps", speed: "< 2s" },
     },
     acessibilidade: { skipToContent: "Skip to content", scrollToTop: "Back to top", navAria: "Main navigation" },
+    marketingNav: { home: "Home", about: "About", tools: "Tools", cases: "Cases", contact: "Contact" },
+    marketingHero: { name: "Lucas Cavalcante", title: "Digital Strategy & Marketing Analytics", description: "Data Analyst with expertise in digital marketing, automation, and market intelligence. I turn data into high-performance campaigns — from audience analysis to conversion optimization." },
+    marketingAbout: { title: "Data-Driven Marketing", description: "With a background in Data Science and hands-on experience in SEO/SEM, paid media, and campaign analytics, I bridge technical analysis with business strategy. Every marketing decision is data-backed, tested, and continuously optimized." },
+    marketingTools: { title: "Tools & Skills", subtitle: "What I use to deliver results", item0: "Google Analytics & Tag Manager", item1: "Meta Ads & Google Ads", item2: "SEO & SEM", item3: "Copywriting & Content", item4: "CRM & Automation", item5: "Power BI & Dashboards" },
+    marketingCases: { title: "Cases & Results", subtitle: "Representative campaign examples and projects", case0: { title: "E-commerce Launch Campaign", metric: "+ 340% conversion rate", description: "Multi-channel strategy with behavioral segmentation, A/B testing, and landing page optimization. Reached 150k users in 4 weeks." }, case1: { title: "SEO Optimization — Institutional Portal", metric: "Top 3 Google in 60 days", description: "Content restructuring, link building, and on-page SEO techniques for 30 high-value keywords in the industrial sector." }, case2: { title: "Campaign Automation — CRM + Email", metric: "480% ROI", description: "Automated lead nurturing pipeline with dynamic segmentation, smart sending, and open/conversion rate analysis." } },
+    marketingContact: { title: "Let's Create Something Impactful?", subtitle: "Your next campaign could be the best in the market. Let's talk." },
   },
   es: {
     nav: { home: "Inicio", showcase: "Showcase", experience: "Experiencia", portfolio: "Proyectos", skills: "Habilidades", certifications: "Certificaciones", languages: "Idiomas", menu: "Menú", swipeToClose: "Desliza para cerrar" },
@@ -286,6 +298,12 @@ export const translations = {
     },
     availability: { label: "Disponible para proyectos", badge: "Disponible" },
     acessibilidade: { skipToContent: "Saltar al contenido", scrollToTop: "Volver arriba", navAria: "Navegación principal" },
+    marketingNav: { home: "Inicio", about: "Sobre mí", tools: "Herramientas", cases: "Casos", contact: "Contacto" },
+    marketingHero: { name: "Lucas Cavalcante", title: "Estrategia Digital & Marketing Analytics", description: "Analista de Datos con experiencia en marketing digital, automatización e inteligencia de mercado. Transformo datos en campañas de alto rendimiento — desde análisis de audiencia hasta optimización de conversión." },
+    marketingAbout: { title: "Marketing Basado en Datos", description: "Con formación en Ciencia de Datos y experiencia práctica en SEO/SEM, medios pagados y análisis de campañas, conecto el análisis técnico con la estrategia de negocio. Cada decisión de marketing se basa en datos, se prueba y se optimiza continuamente." },
+    marketingTools: { title: "Herramientas & Competencias", subtitle: "Lo que uso para generar resultados", item0: "Google Analytics & Tag Manager", item1: "Meta Ads & Google Ads", item2: "SEO & SEM", item3: "Copywriting & Contenido", item4: "CRM & Automatización", item5: "Power BI & Dashboards" },
+    marketingCases: { title: "Casos & Resultados", subtitle: "Ejemplos representativos de campañas y proyectos", case0: { title: "Campaña de Lanzamiento — E-commerce", metric: "+ 340% de conversión", description: "Estrategia multicanal con segmentación conductual, pruebas A/B y optimización de landing page. Alcance de 150 mil usuarios en 4 semanas." }, case1: { title: "Optimización SEO — Portal Institucional", metric: "Top 3 Google en 60 días", description: "Reestructuración de contenido, link building y técnicas SEO on-page para 30 palabras clave de alto valor en el sector industrial." }, case2: { title: "Automatización de Campañas — CRM + Email", metric: "ROI del 480%", description: "Pipeline automatizado de nutrición de leads con segmentación dinámica, envío inteligente y análisis de tasa de apertura/conversión." } },
+    marketingContact: { title: "¿Creamos Algo Impactante?", subtitle: "Tu próxima campaña puede ser la mejor del mercado. Hablemos." },
   }
 };
 

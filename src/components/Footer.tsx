@@ -28,9 +28,13 @@ const socialLinks = [
   },
 ];
 
-export function Footer() {
+interface FooterProps {
+  variant?: 'fixed' | 'static';
+}
+
+export function Footer({ variant = 'fixed' }: FooterProps) {
   return (
-    <footer className="fixed bottom-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-xl border-t border-border/30 py-3">
+    <footer className={`${variant === 'fixed' ? 'fixed bottom-0 left-0 right-0' : 'static'} z-50 bg-background/90 backdrop-blur-xl border-t border-border/30 py-3`}>
       <div className="section-container">
         <div className="flex items-center justify-center gap-3">
           {socialLinks.map((link) => {

@@ -3,6 +3,8 @@ import { Sun, Moon, Menu, X, Globe, ChevronDown, Home, Eye, Briefcase, FolderGit
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useThemeStore } from '../stores/themeStore';
+import { scrollToSection } from '../hooks/useGsapScrollSnap';
+import { HEADER_OFFSET } from '../constants';
 import i18n from '../i18n';
 
 const languages = [
@@ -11,7 +13,13 @@ const languages = [
   { code: 'es', label: 'ES', name: 'Español' },
 ];
 
-const navItems = [
+export interface NavItem {
+  key: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+export const devNavItems: NavItem[] = [
   { key: 'home', href: '#hero', icon: Home },
   { key: 'experience', href: '#experience', icon: Briefcase },
   { key: 'portfolio', href: '#projects', icon: FolderGit2 },
@@ -21,7 +29,11 @@ const navItems = [
   { key: 'languages', href: '#languages', icon: Languages },
 ];
 
-export function Nav() {
+interface NavProps {
+  navItems?: NavItem[];
+}
+
+export function Nav({ navItems = devNavItems }: NavProps) {
   const { t } = useTranslation();
   const { theme, toggleTheme } = useThemeStore();
   const [isOpen, setIsOpen] = useState(false);
@@ -47,23 +59,37 @@ export function Nav() {
   }, []);
 
   useEffect(() => {
-    const handleScroll = () => {
-      const navHeight = 64;
-      const offset = navHeight + 20;
-      let current = 'hero';
-      for (const item of navItems) {
-        const el = document.querySelector(item.href) as HTMLElement | null;
-        if (el && el.offsetTop - offset <= window.scrollY) {
-          current = item.href.replace('#', '');
-        }
-      }
-      setActiveSection(current);
-    };
+    const sectionEls = navItems
+      .map(item => document.querySelector(item.href) as HTMLElement | null)
+      .filter(Boolean) as HTMLElement[];
 
-    handleScroll();
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    if (sectionEls.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        let best = entries[0];
+        for (const entry of entries) {
+          if (entry.intersectionRatio > best.intersectionRatio) {
+            best = entry;
+          }
+        }
+        if (best.isIntersecting) {
+          setActiveSection(best.target.id);
+          history.replaceState(null, '', `#${best.target.id}`);
+        }
+      },
+      {
+        rootMargin: `-${HEADER_OFFSET}px 0px -50% 0px`,
+        threshold: [0, 0.25, 0.5, 0.75, 1],
+      }
+    );
+
+    for (const el of sectionEls) {
+      observer.observe(el);
+    }
+
+    return () => observer.disconnect();
+  }, [navItems]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -92,6 +118,13 @@ export function Nav() {
 
   const closeMobileMenu = useCallback(() => setIsOpen(false), []);
 
+  const handleNavClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    const id = href.replace('#', '');
+    scrollToSection(id);
+    closeMobileMenu();
+  }, [closeMobileMenu]);
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-xl border-b border-border/50 shadow-soft" role="navigation" aria-label={t('acessibilidade.navAria')}>
       <div className="section-container relative z-10">
@@ -119,6 +152,7 @@ export function Nav() {
                 <a
                   key={item.key}
                   href={item.href}
+                  onClick={(e) => handleNavClick(e, item.href)}
                   className={`px-4 py-2 text-sm font-medium rounded-full transition-all ${
                     isActive
                       ? 'text-primary bg-primary/10'
@@ -211,7 +245,7 @@ export function Nav() {
                     <motion.a
                       key={item.key}
                       href={item.href}
-                      onClick={closeMobileMenu}
+                      onClick={(e) => handleNavClick(e, item.href)}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -20 }}

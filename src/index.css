@@ -72,6 +72,9 @@
   * {
     @apply border-border;
   }
+  html {
+    scroll-snap-type: y proximity;
+  }
   body {
     @apply bg-background text-foreground;
   }
@@ -146,7 +149,101 @@
   display: none;
 }
 
+/* Portfolio Marketing — tom Âmbar/Dourado */
+.theme-marketing {
+  --primary: 32 95% 44%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 32 85% 55%;
+  --ring: 32 90% 50%;
+}
+
+/* Ajustes para seções dentro do card 3D Html */
+[data-card="true"] section {
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+  min-height: auto !important;
+  margin: 0 !important;
+  background: transparent !important;
+  overflow: visible !important;
+}
+
+[data-card="true"] .section-container {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  max-width: none !important;
+}
+
+[data-card="true"] section > div:first-child:is(.absolute) {
+  display: none !important;
+}
+
+[data-card="true"] .bg-gradient-blue-light,
+[data-card="true"] .bg-gradient-blue-dark {
+  display: none !important;
+}
+
+[data-card="true"] #hero .grid {
+  display: block !important;
+  gap: 0 !important;
+}
+
+[data-card="true"] #hero .grid > div:last-child {
+  display: none !important;
+}
+
+[data-card="true"] #hero .grid h1 {
+  font-size: 1.5rem !important;
+  line-height: 1.75rem !important;
+}
+
+[data-card="true"] #hero .grid .text-xl {
+  font-size: 1rem !important;
+}
+
+[data-card="true"] h2 {
+  font-size: 1.25rem !important;
+  line-height: 1.5rem !important;
+}
+
+[data-card="true"] h3 {
+  font-size: 1rem !important;
+}
+
+[data-card="true"] .text-3xl {
+  font-size: 1.25rem !important;
+}
+
+[data-card="true"] .text-4xl {
+  font-size: 1.5rem !important;
+}
+
+[data-card="true"] .mb-16,
+[data-card="true"] .mb-12 {
+  margin-bottom: 0.5rem !important;
+}
+
+[data-card="true"] .gap-12 {
+  gap: 1rem !important;
+}
+
+[data-card="true"] .flex-wrap.gap-2 {
+  gap: 0.25rem !important;
+}
+
+[data-card="true"] #hero .grid p:has(+ .grid) {
+  /* hide subtitle description for compactness */
+}
+
+[data-card="true"] h2 {
+  color: var(--section-neon);
+  -webkit-text-fill-color: var(--section-neon);
+}
+
 /* Acessibilidade */
+.scroll-snap-none {
+  scroll-snap-type: none !important;
+}
+
 .skip-to-content {
   position: absolute;
   top: -100%;

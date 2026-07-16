@@ -115,3 +115,88 @@ test.describe('Portfolio - Responsividade', () => {
     await expect(page.locator('button[aria-label="Voltar ao topo"]')).toBeVisible();
   });
 });
+
+test.describe('Portfolio - Toggle Dev/Marketing', () => {
+
+  test('deve alternar entre Dev e Marketing pelo toggle', async ({ page }) => {
+    await page.goto('/portfolio/');
+    const toggleBtn = page.locator('button[aria-label="Abrir portfólio Marketing"]');
+    await expect(toggleBtn).toBeVisible();
+
+    await toggleBtn.click();
+    await page.waitForTimeout(1200);
+    await expect(page.locator('html.theme-marketing')).toBeVisible();
+
+    const toggleBackBtn = page.locator('button[aria-label="Open Dev portfolio"]');
+    await toggleBackBtn.click();
+    await page.waitForTimeout(1200);
+    await expect(page.locator('html.theme-marketing')).not.toBeVisible();
+  });
+
+  test('toggle deve mostrar indicador correto para cada portfolio', async ({ page }) => {
+    await page.goto('/portfolio/');
+    const toggle = page.locator('button[aria-label="Abrir portfólio Marketing"]');
+    await expect(toggle).toContainText('Dev');
+    await toggle.click();
+    await page.waitForTimeout(1200);
+    await expect(page.locator('button[aria-label="Open Dev portfolio"]')).toContainText('Marketing');
+  });
+});
+
+test.describe('Portfolio - Scroll Snap', () => {
+
+  test('scroll deve ter snap entre seções', async ({ page }) => {
+    await page.goto('/portfolio/');
+    const html = page.locator('html');
+    const snapType = await html.evaluate((el) => getComputedStyle(el).scrollSnapType);
+    expect(snapType).toContain('y');
+  });
+
+  test('spacers de seção devem ocupar viewport', async ({ page }) => {
+    await page.goto('/portfolio/');
+    const vh = await page.evaluate(() => window.innerHeight);
+    const spacers = page.locator('.h-screen');
+    const count = await spacers.count();
+    expect(count).toBeGreaterThanOrEqual(5);
+    const firstH = await spacers.first().evaluate((el) => el.getBoundingClientRect().height);
+    expect(Math.abs(firstH - vh)).toBeLessThan(5);
+  });
+
+  test('scroll horizontal da experiência deve ter indicadores de página', async ({ page }) => {
+    await page.goto('/portfolio/');
+    await page.locator('#experience').scrollIntoViewIfNeeded();
+    await page.waitForTimeout(800);
+    const indicators = page.locator('#experience button[aria-label^="Go to page"]');
+    const count = await indicators.count();
+    expect(count).toBeGreaterThanOrEqual(1);
+  });
+});
+
+test.describe('Portfolio - Conteúdo 3D', () => {
+
+  test('canvas 3D deve estar presente', async ({ page }) => {
+    await page.goto('/portfolio/');
+    await page.waitForTimeout(2000);
+    const canvas = page.locator('canvas');
+    await expect(canvas.first()).toBeVisible();
+  });
+
+  test('mudar para marketing mantém canvas 3D', async ({ page }) => {
+    await page.goto('/portfolio/');
+    const canvasBefore = page.locator('canvas');
+    await expect(canvasBefore.first()).toBeVisible();
+
+    await page.locator('button[aria-label="Abrir portfólio Marketing"]').click();
+    await page.waitForTimeout(1500);
+
+    const canvasAfter = page.locator('canvas');
+    await expect(canvasAfter.first()).toBeVisible();
+  });
+
+  test('conteúdo Html 3D da seção Hero deve ser visível', async ({ page }) => {
+    await page.goto('/portfolio/');
+    await page.waitForTimeout(2000);
+    const heroName = page.locator('text=Lucas Cavalcante').first();
+    await expect(heroName).toBeVisible();
+  });
+});
