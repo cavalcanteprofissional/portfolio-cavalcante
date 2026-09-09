@@ -4,3 +4,4 @@ node_modules/
 # Saída de build/deploy teste (wrangler --dry-run --outdir)
 dist-check/
 .dev.vars
+.wrangler/
