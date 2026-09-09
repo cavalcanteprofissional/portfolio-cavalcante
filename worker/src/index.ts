@@ -3,6 +3,9 @@ import { computeTotal } from './pricing';
 import { buildQuotePdf } from './pdf';
 import { sendEmail, buildClientEmail, buildOwnerNotice } from './email';
 import { shortCode } from './types';
+import { embed, retrieve, askGroq, buildSystemPrompt, sanitizeHistory, RagError } from './rag';
+import type { ChatMessage } from './rag';
+import type { Ai } from '@cloudflare/workers-types/experimental';
 import type { OrcamentoRow, QuoteRequest } from './types';
 
 export interface Env {
@@ -15,6 +18,8 @@ export interface Env {
   ADMIN_EMAILS?: string;
   UMAMI_WEBSITE_ID?: string;
   UMAMI_API_KEY?: string;
+  AI: Ai;
+  GROQ_API_KEY?: string;
 }
 
 const GITHUB_PAGES_ORIGIN = 'https://cavalcanteprofissional.github.io';
@@ -24,10 +29,11 @@ const LANG = 'pt'; // orcamento sempre gerado em pt para o cliente
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const URGENCIAS = new Set(['normal', 'urgente', 'muito_urgente']);
 
-// Limitação simples por IP (em memória por isolate) p/ o POST /orcamento.
-// Proteção suficiente p/ vazamento de emails; não bloqueia por nuvem (sem Turnstile).
+// Limitação simples por IP (em memória por isolate) p/ o POST /orcamento e POST /chat.
+// Proteção suficiente p/ vazamento de emails / abuso do chatbot; não bloqueia por nuvem (sem Turnstile).
 const RATE_WINDOW_MS = 60 * 60 * 1000;
-const RATE_MAX = 5;
+const RATE_MAX = 5; // /orcamento
+const CHAT_RATE_MAX = 20; // /chat (mais alto que orçamento)
 const rateHits = new Map<string, { count: number; resetAt: number }>();
 
 class ApiError extends Error {
@@ -154,7 +160,7 @@ function assertQuoteValid(body: Partial<QuoteRequest> | null): asserts body is Q
 }
 
 // Retorna ms até liberar (retryAfter) ou null se dentro do limite
-function checkRate(ip: string): number | null {
+function checkRate(ip: string, max = RATE_MAX, windowMs = RATE_WINDOW_MS): number | null {
   const now = Date.now();
   const entry = rateHits.get(ip);
   if (!entry || now >= entry.resetAt) {
@@ -163,11 +169,11 @@ function checkRate(ip: string): number | null {
         if (Date.now() >= hit.resetAt) rateHits.delete(key);
       }
     }
-    rateHits.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    rateHits.set(ip, { count: 1, resetAt: now + windowMs });
     return null;
   }
   entry.count += 1;
-  if (entry.count > RATE_MAX) return entry.resetAt - now;
+  if (entry.count > max) return entry.resetAt - now;
   return null;
 }
 
@@ -361,8 +367,37 @@ export default {
         return json(await adminAnalytics(env));
       }
 
+      // POST /chat — chatbot RAG público (rate-limit 20/h). Retorna { answer }.
+      if (req.method === 'POST' && path === '/chat') {
+        const body = await readJson<Partial<{ message?: string; lang?: string; history?: ChatMessage[] }>>(req);
+        const message = typeof body?.message === 'string' ? body.message.trim() : '';
+        if (!message || message.length > 2000) {
+          throw new ApiError('message: informe entre 1 e 2000 caracteres', 422);
+        }
+        const lang = body?.lang === 'en' || body?.lang === 'es' ? body.lang : 'pt';
+
+        const ip = req.headers.get('CF-Connecting-IP') ?? 'unknown';
+        const retryAfter = checkRate(ip, CHAT_RATE_MAX);
+        if (retryAfter !== null) {
+          const resp = error('Muitas mensagens. Tente novamente em alguns minutos.', 429);
+          resp.headers.set('Retry-After', String(Math.ceil(retryAfter / 1000)));
+          return resp;
+        }
+
+        if (!env.GROQ_API_KEY) return error('Chat temporariamente indisponível', 503);
+
+        const history = sanitizeHistory(body?.history);
+        const queryEmbedding = await embed(message, env);
+        const chunks = await retrieve(db, queryEmbedding, lang);
+        const services = await listPublicServices(db);
+        const system = buildSystemPrompt(chunks, services, lang);
+        const answer = await askGroq(system, history, message, env);
+        return json({ answer });
+      }
+
       throw new ApiError('Rota nao encontrada', 404);
     } catch (e) {
+      if (e instanceof RagError) return error(e.message, e.status);
       if (e instanceof ApiError) return error(e.message, e.status);
       console.error('erro interno do worker:', e);
       return error('Erro interno do servidor', 500);

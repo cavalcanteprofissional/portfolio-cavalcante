@@ -4,7 +4,7 @@ import { useThemeStore } from './stores/themeStore';
 import { useBootStore } from './stores/bootStore';
 import { useTranslation } from 'react-i18next';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { Nav, Hero, Stats, Footer, ScrollToTop, BootScreen, PoolEffect, CookieConsent } from './components';
+import { Nav, Hero, Stats, Footer, ScrollToTop, BootScreen, PoolEffect, CookieConsent, ChatBot } from './components';
 import { useConsentStore } from './stores/consentStore';
 import { enableUmami } from './lib/analytics';
 import { focusReveal } from './lib/motion';
@@ -137,6 +137,7 @@ function App() {
           {booted && <Footer />}
           <ScrollToTop />
           <CookieConsent visible={showConsent} />
+          {booted && <ChatBot />}
         </div>
       </MotionConfig>
     </ErrorBoundary>

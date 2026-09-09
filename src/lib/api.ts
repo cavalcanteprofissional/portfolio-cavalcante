@@ -133,3 +133,46 @@ export async function adminFetchAnalytics(token: string): Promise<AdminAnalytics
     headers: { Authorization: `Bearer ${token}` },
   });
 }
+
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+// Respostas locais (demo) quando o Worker não está configurado — espelha o `submitOrcamento`.
+const LOCAL_ANSWERS: Record<string, string[]> = {
+  pt: [
+    'Olá! Sou o assistente de Lucas Cavalcante (analista de dados & IA). Posso falar sobre experiência, projetos, habilidades e certificações.',
+    'Boa pergunta! Como estou em modo de demonstração, sugira falar com o Lucas no WhatsApp (https://wa.me/5585996859051) ou solicitar um orçamento pelo site. Configurar o backend habilita a resposta completa.',
+    'Posso ajudar com informações do currículo: experiência, formação, certificações e idiomas. Fora isso, o melhor é falar direto comigo pelo WhatsApp!',
+  ],
+  en: [
+    'Hi! I\'m the assistant for Lucas Cavalcante (data analyst & AI). I can talk about experience, projects, skills and certifications.',
+    'Good question! In demo mode I suggest contacting Lucas on WhatsApp (https://wa.me/5585996859051) or requesting a quote on the site. Setting up the backend enables the full answer.',
+    'I can help with resume info: experience, education, certifications and languages. Otherwise, the best is to talk directly on WhatsApp!',
+  ],
+  es: [
+    '¡Hola! Soy el asistente de Lucas Cavalcante (analista de datos & IA). Puedo hablar sobre experiencia, proyectos, habilidades y certificaciones.',
+    '¡Buena pregunta! En modo demo te sugiero contactar a Lucas por WhatsApp (https://wa.me/5585996859051) o solicitar un presupuesto en el sitio. Configurar el backend habilita la respuesta completa.',
+    'Puedo ayudar con información del currículo: experiencia, formación, certificaciones e idiomas. Fuera de eso, ¡lo mejor es escribirme directamente por WhatsApp!',
+  ],
+};
+
+export async function chatWithBot(
+  message: string,
+  lang: string,
+  history: ChatMessage[],
+): Promise<string> {
+  // Sem Worker configurado: responde localmente (demonstração)
+  if (!available()) {
+    const pool = LOCAL_ANSWERS[lang] ?? LOCAL_ANSWERS.pt;
+    await new Promise((r) => setTimeout(r, 700 + Math.random() * 500));
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+  const res = await wf<{ answer: string }>('/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message, lang, history }),
+  });
+  return res.answer;
+}

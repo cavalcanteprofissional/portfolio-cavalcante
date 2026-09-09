@@ -16,3 +16,5 @@ export { BootScreen } from './BootScreen';
 export { PoolEffect } from './PoolEffect';
 export { ProfileLight } from './ProfileLight';
 export { CookieConsent } from './CookieConsent';
+export { QuoteModal } from './QuoteModal';
+export { ChatBot } from './ChatBot';

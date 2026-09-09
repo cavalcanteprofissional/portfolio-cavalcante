@@ -1,3 +1,21 @@
+# Plano de Melhorias — Onda 1.23 (2026-09-09) — Chatbot RAG integrado
+
+> Detalhes técnicos completos em `PLANO-CHATBOT-RAG.md` (decisões, arquitetura, segurança, custos). Implementação conforme planejado; validação fim-a-fim depende de Groq liberada (conta normalizada) + `wrangler secret put GROQ_API_KEY` pós-deploy.
+
+## 🤖 Onda 1.23 — Chatbot RAG (estilo WhatsApp)
+- [x] **Etapa 1 — Supabase + ingestão**: migração `supabase/migrations/20260908_chat_docs.sql` (tabela `chat_docs` pgvector 1024 + HNSW cosine + rpc `match_chat_docs` fallback `pt` + revoke anon/authenticated) · devDep `js-yaml` · script npm `ingest` + `scripts/ingest-resume.mjs` (front-matter → chunks PT por seção, embeddings via REST `@cf/baai/bge-m3`, delete-then-insert idempotente)
+- [ ] ⏳ **Ingestão rodada** (`npm run ingest`) — aguarda `SERVICE_ROLE_KEY` no `.env.local`
+- [ ] ⏳ **Migração aplicada no SQL Editor** do Supabase (`chat_docs` + `match_chat_docs`)
+- [x] **Etapa 2 — Worker `POST /chat`**: `worker/src/rag.ts` (embed `bge-m3` via binding `AI`, retrieve `match_chat_docs`, askGroq `llama-3.1-8b-instant`, buildSystemPrompt com serviços públicos sem preço + handoff WhatsApp/orçamento) · `Env` + `AI`/`GROQ_API_KEY` · `wrangler.toml` binding `[ai]` + comment do secret · tsconfig experimental types · rate-limit 20/h (`checkRate` generalizado) · validação message/lang/history · 503 graceful sem key
+- [ ] ⏳ **`wrangler secret put GROQ_API_KEY`** (pós-deploy; secret persiste no CI)
+- [x] **Etapa 3 — Frontend**: `chatWithBot()` (fallback demo local) · i18n `chat.*` pt/en/es · `ChatBot.tsx` (FAB `z-[58]`, painel bottom-sheet + backdrop, bolhas/timestamps/typing, chips 1ª abertura, histórico sessionStorage, handoff WhatsApp + QuoteModal) · barrel + `<ChatBot />` no App
+- [x] **Etapa 4 — Verificação**: typecheck front+worker · lint (arquivos editados) · build · `wrangler deploy --dry-run` (binding `AI` OK)
+- [x] **Etapa 5 — Docs/versionamento**: `.env.example` (SERVICE_ROLE_KEY + GROQ) · TODO.md · CHANGELOG `[1.23.0]` · `package.json` → 1.23.0
+- [ ] ⏳ **Validação fim-a-fim local** (usuário testa antes do push): chat no site com Worker configurado + resposta real da Groq
+- [ ] ⏳ **Manual pós-deploy:** migration SQL Editor · `npm run ingest` · `wrangler secret put GROQ_API_KEY`
+
+---
+
 # Plano de Melhorias — Onda 1.22 (2026-08-31)
 
 > Fechamento pós-1.21. Prioridades selecionadas: Política de Privacidade + rodapé (checklist §5), CV17 (overrides de tradução) e Visão de visitas (Umami) + Export CSV no Admin (A5 deferido). Decisões do usuário anotadas em cada item.

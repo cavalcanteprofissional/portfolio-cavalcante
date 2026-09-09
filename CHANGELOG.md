@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.23.0] - 2026-09-09
+
+### 🤖 Chatbot RAG integrado (Onda 1.23)
+
+- 📚 **Cache de conhecimento** — migração `chat_docs` (pgvector 1024, HNSW cosine) + rpc `match_chat_docs` (fallback `pt`) no Supabase; script `npm run ingest` (`scripts/ingest-resume.mjs`) gera chunks PT por seção do CV e faz embeddings via Cloudflare Workers AI `@cf/baai/bge-m3`
+- 🔧 **Worker** — `POST /chat` público (rate-limit 20/h): embedding da pergunta (`env.AI`) → top-K no pgvector → contexto + serviços públicos (sem preços) → resposta da **Groq** `llama-3.1-8b-instant`; novo módulo `worker/src/rag.ts` + secret `GROQ_API_KEY` + binding `[ai]`
+- 💬 **Frontend** — widget `ChatBot.tsx` estilo WhatsApp: FAB flutuante (`z-[58]`), painel bottom-sheet com backdrop, bolhas com timestamps e indicador "digitando…", chips de sugestão (1ª abertura), histórico em `sessionStorage`, handoff para WhatsApp e modal de orçamento; fallback demo local quando o Worker não está configurado
+- 🌐 **i18n** — namespace `chat.*` em pt/en/es (`title`, `status`, `placeholder`, `typing`, `welcome`, `suggestions`, `handoff*`)
+- 🔐 **Segurança** — chaves de LLM/embeddings só no Worker (secrets); `chat_docs` sem RLS (somente `service_role`); respostas arbitradas por prompt de sistema restrito
+
 ## [1.22.0] - 2026-08-31
 
 ### 🍪 Política de Privacidade no rodapé

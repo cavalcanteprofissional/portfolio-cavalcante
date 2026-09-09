@@ -3,6 +3,10 @@ main = "src/index.ts"
 compatibility_date = "2026-08-27"
 workers_dev = true
 
+# Workers AI — embeddings do chatbot RAG (binding padrao `AI`). Acesso via env.AI.
+[ai]
+binding = "AI"
+
 # Variaveis públicas (visiveis ao codigo, nao sensiveis)
 [vars]
 SUPABASE_URL = "https://ohtkfjckydmjsfuouyaj.supabase.co"
@@ -21,6 +25,7 @@ UMAMI_WEBSITE_ID = "076f01cd-40c0-45de-87c8-6888cb9efb78"
 #   SERVICE_ROLE_KEY   -> nova service_role key (rotacionada pelo usuario)
 #   BREVO_API_KEY      -> Brevo (SMTP/Transactional) API key
 #   UMAMI_API_KEY      -> Umami Cloud API key (Bearer) para o proxy de analytics do admin
+#   GROQ_API_KEY       -> Groq LLM do chatbot RAG (rota POST /chat) — wrangler secret put GROQ_API_KEY
 
 # Cron Trigger gratuito: ping anti-pausa do Supabase 1x/dia
 [triggers]
