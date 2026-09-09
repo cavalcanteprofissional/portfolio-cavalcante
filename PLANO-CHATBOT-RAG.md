@@ -14,7 +14,7 @@
 
 | Decisão | Escolha |
 |--------|---------|
-| LLM | **Groq** — `llama-3.1-8b-instant` (free tier, rápida; suficiente p/ QA de portfólio) |
+| LLM | **Groq** — `groq/compound-mini` (2026-09-09: `llama-3.1-8b-instant` descontinuado na conta; trocado p/ model nativo Groq, rápido e barato — ver #Valid-1) |
 | Embeddings | **Cloudflare Workers AI** — `@cf/baai/bge-m3` (**1024 dims**, multilíngue pt/en/es) |
 | Vector store | **Supabase pgvector** (já existe Supabase no projeto) |
 | Acesso | **Público** (visitantes) com rate-limit (20/hr no `/chat`) |
@@ -220,7 +220,7 @@ revoke all on function public.match_chat_docs(vector(1024), int, text) from auth
 
 ## Pontos decididos (antes em aberto)
 
-- Modelo Groq: **`llama-3.1-8b-instant`** (default).
+- Modelo Groq: **`groq/compound-mini`** (default, 2026-09-09; antes `llama-3.1-8b-instant`).
 - Embeddings: **`@cf/baai/bge-m3`** (multilíngue, 1024 dims) — ajusta schema.
 - Sugestões/chips: **só na 1ª abertura** (histórico vazio).
 - Histórico: **client-side** (estado + `sessionStorage`).
@@ -231,3 +231,20 @@ revoke all on function public.match_chat_docs(vector(1024), int, text) from auth
 ## Pendências finas (UI, sem bloquear)
 
 - Posição exata do FAB e estilo visual das bolhas (decidir na implementação).
+
+## Log de validação (2026-09-09)
+
+- **Ingest**: `npm run ingest` → 30 linhas em `chat_docs` (5.5s). Embeddings REST
+  exigem token Cloudflare com permissão **Workers AI:Edit** (o token de Pages dava 401
+  `Authentication error` — resolvido editando permissões no My Profile → API Tokens).
+- **Retrieve**: `match_chat_docs` com embedding real de "O que você faz?" retornou
+  `dados_pessoais`/`resumo`/`experiencia` (top-3).
+- **Worker (`wrangler dev --remote`)**: `POST /chat` sem key → 503 graceful; msg vazia →
+  422; `lang: "xx"` → fallback pt; com `GROQ_API_KEY` no `.dev.vars` → **resposta real da
+  Groq `groq/compound-mini` em 4.1s**; pergunta de preço → recusa inventar e sugere
+  WhatsApp/orçamento (3.1s).
+- **Troca de modelo**: `llama-3.1-8b-instant` → `model_not_found` na conta (catálogo 2026).
+  Candidatos testados (pt): `groq/compound-mini` ✓, `openai/gpt-oss-20b` ✓, `qwen/qwen3.8-27b` ✓.
+  Escolhido `groq/compound-mini` (nativo Groq, rápido e barato).
+- **Armadilha Windows**: `taskkill` sozinho não mata a árvore `wrangler`→`workerd`; usar
+  `taskkill /PID <pai> /T /F` (parent do workerd) senão zumbis mantêm a porta 8787.

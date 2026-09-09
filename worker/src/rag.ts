@@ -7,7 +7,7 @@ import type { Ai } from '@cloudflare/workers-types/experimental';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export const EMBEDDING_MODEL = '@cf/baai/bge-m3'; // multilíngue pt/en/es, 1024 dims
-export const GROQ_MODEL = 'llama-3.1-8b-instant'; // free tier, rápida, suficiente p/ QA
+export const GROQ_MODEL = 'groq/compound-mini'; // resposta ágil + custo baixo; catálogo Groq 2026 // free tier, rápida, suficiente p/ QA
 export const WHATSAPP_URL = 'https://wa.me/5585996859051';
 
 const GROQ_API_BASE = 'https://api.groq.com/openai';

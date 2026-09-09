@@ -4,15 +4,15 @@
 
 ## 🤖 Onda 1.23 — Chatbot RAG (estilo WhatsApp)
 - [x] **Etapa 1 — Supabase + ingestão**: migração `supabase/migrations/20260908_chat_docs.sql` (tabela `chat_docs` pgvector 1024 + HNSW cosine + rpc `match_chat_docs` fallback `pt` + revoke anon/authenticated) · devDep `js-yaml` · script npm `ingest` + `scripts/ingest-resume.mjs` (front-matter → chunks PT por seção, embeddings via REST `@cf/baai/bge-m3`, delete-then-insert idempotente)
-- [ ] ⏳ **Ingestão rodada** (`npm run ingest`) — aguarda `SERVICE_ROLE_KEY` no `.env.local`
-- [ ] ⏳ **Migração aplicada no SQL Editor** do Supabase (`chat_docs` + `match_chat_docs`)
-- [x] **Etapa 2 — Worker `POST /chat`**: `worker/src/rag.ts` (embed `bge-m3` via binding `AI`, retrieve `match_chat_docs`, askGroq `llama-3.1-8b-instant`, buildSystemPrompt com serviços públicos sem preço + handoff WhatsApp/orçamento) · `Env` + `AI`/`GROQ_API_KEY` · `wrangler.toml` binding `[ai]` + comment do secret · tsconfig experimental types · rate-limit 20/h (`checkRate` generalizado) · validação message/lang/history · 503 graceful sem key
+- [x] **Ingestão rodada** — `npm run ingest`: 30 linhas em `chat_docs` (5.5s); `match_chat_docs` validado com embedding real ("O que você faz?" → dados_pessoais/resumo/experiencia)
+- [x] **Migração aplicada no SQL Editor** do Supabase (`chat_docs` + `match_chat_docs`) — 2026-09-09 (usuário)
+- [x] **Etapa 2 — Worker `POST /chat`**: `worker/src/rag.ts` (embed `bge-m3` via binding `AI`, retrieve `match_chat_docs`, askGroq `groq/compound-mini`, buildSystemPrompt com serviços públicos sem preço + handoff WhatsApp/orçamento) · `Env` + `AI`/`GROQ_API_KEY` · `wrangler.toml` binding `[ai]` + comment do secret · tsconfig experimental types · rate-limit 20/h (`checkRate` generalizado) · validação message/lang/history · 503 graceful sem key
 - [ ] ⏳ **`wrangler secret put GROQ_API_KEY`** (pós-deploy; secret persiste no CI)
 - [x] **Etapa 3 — Frontend**: `chatWithBot()` (fallback demo local) · i18n `chat.*` pt/en/es · `ChatBot.tsx` (FAB `z-[58]`, painel bottom-sheet + backdrop, bolhas/timestamps/typing, chips 1ª abertura, histórico sessionStorage, handoff WhatsApp + QuoteModal) · barrel + `<ChatBot />` no App
 - [x] **Etapa 4 — Verificação**: typecheck front+worker · lint (arquivos editados) · build · `wrangler deploy --dry-run` (binding `AI` OK)
 - [x] **Etapa 5 — Docs/versionamento**: `.env.example` (SERVICE_ROLE_KEY + GROQ) · TODO.md · CHANGELOG `[1.23.0]` · `package.json` → 1.23.0
-- [ ] ⏳ **Validação fim-a-fim local** (usuário testa antes do push): chat no site com Worker configurado + resposta real da Groq
-- [ ] ⏳ **Manual pós-deploy:** migration SQL Editor · `npm run ingest` · `wrangler secret put GROQ_API_KEY`
+- [x] **Validação fim-a-fim local** (`wrangler dev --remote` + curl): 503 graceful sem key · validação 422 msg vazia / fallback pt em lang inválida · **resposta real da Groq** (`groq/compound-mini`) em `POST /chat` (4.1s) sobre o currículo · handoff de preço sem inventar valores (3.1s)
+- [ ] ⏳ **Manual pós-deploy:** `wrangler secret put GROQ_API_KEY` · (migration+ingest já feitos) | [ ] **Rotacionar `service_role`** (chave exposta 2× no chat — recomendo antes do push)
 
 ---
 
