@@ -8,7 +8,10 @@
 - 🔧 **Worker** — `POST /chat` público (rate-limit 20/h): embedding da pergunta (`env.AI`) → top-K no pgvector → contexto + serviços públicos (sem preços) → resposta da **Groq** `groq/compound-mini` (catálogo 2026; `llama-3.1-8b-instant` foi descontinuado na conta); novo módulo `worker/src/rag.ts` + secret `GROQ_API_KEY` + binding `[ai]`
 - 💬 **Frontend** — widget `ChatBot.tsx` estilo WhatsApp: FAB flutuante (`z-[58]`), painel bottom-sheet com backdrop, bolhas com timestamps e indicador "digitando…", chips de sugestão (1ª abertura), histórico em `sessionStorage`, handoff para WhatsApp e modal de orçamento; fallback demo local quando o Worker não está configurado
 - 🌐 **i18n** — namespace `chat.*` em pt/en/es (`title`, `status`, `placeholder`, `typing`, `welcome`, `suggestions`, `handoff*`)
+- 🖼️ **Avatar do assistente** — imagem do perfil do bot em `public/images/chat/assistant-avatar.jpeg` (substitui o monograma "LC" no header do chat)
 - 🔐 **Segurança** — chaves de LLM/embeddings só no Worker (secrets); `chat_docs` sem RLS (somente `service_role`); respostas arbitradas por prompt de sistema restrito
+- ✅ **Validação fim-a-fim (2026-09-09)** — `npm run ingest` → 30 linhas em `chat_docs`; retrieve real via `match_chat_docs`; `POST /chat` no `wrangler dev --remote` → resposta real da Groq em ~4s + handoff de preço (sem inventar valores); CORS `localhost:5173` liberado; ajustes próprios de Windows (watcher do Vite em rename → reiniciar o dev).
+- 🧰 **Ajustes durante a implementação** — `llama-3.1-8b-instant`→`groq/compound-mini` (modelo descontinuado na conta); token Cloudflare ganhou permissão **Workers AI:Edit** (401); import ESM do `js-yaml` v5 (named export).
 
 ## [1.22.0] - 2026-08-31
 

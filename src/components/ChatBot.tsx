@@ -197,9 +197,13 @@ export function ChatBot() {
                   {/* Cabeçalho */}
                   <div className="flex items-center gap-3 px-4 pt-4 pb-2.5 border-b border-border">
                     <div className="relative shrink-0">
-                      <div className="w-9 h-9 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-sm font-bold">
-                        LC
-                      </div>
+                      <img
+                        src="/portfolio-cavalcante/images/chat/assistant-avatar.jpeg"
+                        alt={t('chat.title')}
+                        width={36}
+                        height={36}
+                        className="w-9 h-9 rounded-full object-cover border border-primary/30"
+                      />
                       <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-card" />
                     </div>
                     <div className="flex-1 min-w-0">

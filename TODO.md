@@ -1,18 +1,37 @@
 # Plano de Melhorias — Onda 1.23 (2026-09-09) — Chatbot RAG integrado
 
-> Detalhes técnicos completos em `PLANO-CHATBOT-RAG.md` (decisões, arquitetura, segurança, custos). Implementação conforme planejado; validação fim-a-fim depende de Groq liberada (conta normalizada) + `wrangler secret put GROQ_API_KEY` pós-deploy.
+> Detalhes técnicos completos em `PLANO-CHATBOT-RAG.md` (decisões, arquitetura, segurança, custos) e a seção **Chatbot IA (RAG)** do `README.md` (fluxo + mermaid + arquitetura). Implementação concluída e validada fim-a-fim localmente; falta deploy em produção (push → Actions → `wrangler deploy`) + secrets.
 
 ## 🤖 Onda 1.23 — Chatbot RAG (estilo WhatsApp)
-- [x] **Etapa 1 — Supabase + ingestão**: migração `supabase/migrations/20260908_chat_docs.sql` (tabela `chat_docs` pgvector 1024 + HNSW cosine + rpc `match_chat_docs` fallback `pt` + revoke anon/authenticated) · devDep `js-yaml` · script npm `ingest` + `scripts/ingest-resume.mjs` (front-matter → chunks PT por seção, embeddings via REST `@cf/baai/bge-m3`, delete-then-insert idempotente)
-- [x] **Ingestão rodada** — `npm run ingest`: 30 linhas em `chat_docs` (5.5s); `match_chat_docs` validado com embedding real ("O que você faz?" → dados_pessoais/resumo/experiencia)
-- [x] **Migração aplicada no SQL Editor** do Supabase (`chat_docs` + `match_chat_docs`) — 2026-09-09 (usuário)
-- [x] **Etapa 2 — Worker `POST /chat`**: `worker/src/rag.ts` (embed `bge-m3` via binding `AI`, retrieve `match_chat_docs`, askGroq `groq/compound-mini`, buildSystemPrompt com serviços públicos sem preço + handoff WhatsApp/orçamento) · `Env` + `AI`/`GROQ_API_KEY` · `wrangler.toml` binding `[ai]` + comment do secret · tsconfig experimental types · rate-limit 20/h (`checkRate` generalizado) · validação message/lang/history · 503 graceful sem key
-- [ ] ⏳ **`wrangler secret put GROQ_API_KEY`** (pós-deploy; secret persiste no CI)
-- [x] **Etapa 3 — Frontend**: `chatWithBot()` (fallback demo local) · i18n `chat.*` pt/en/es · `ChatBot.tsx` (FAB `z-[58]`, painel bottom-sheet + backdrop, bolhas/timestamps/typing, chips 1ª abertura, histórico sessionStorage, handoff WhatsApp + QuoteModal) · barrel + `<ChatBot />` no App
-- [x] **Etapa 4 — Verificação**: typecheck front+worker · lint (arquivos editados) · build · `wrangler deploy --dry-run` (binding `AI` OK)
-- [x] **Etapa 5 — Docs/versionamento**: `.env.example` (SERVICE_ROLE_KEY + GROQ) · TODO.md · CHANGELOG `[1.23.0]` · `package.json` → 1.23.0
-- [x] **Validação fim-a-fim local** (`wrangler dev --remote` + curl): 503 graceful sem key · validação 422 msg vazia / fallback pt em lang inválida · **resposta real da Groq** (`groq/compound-mini`) em `POST /chat` (4.1s) sobre o currículo · handoff de preço sem inventar valores (3.1s)
-- [ ] ⏳ **Manual pós-deploy:** `wrangler secret put GROQ_API_KEY` · (migration+ingest já feitos) | [ ] **Rotacionar `service_role`** (chave exposta 2× no chat — recomendo antes do push)
+
+### ✅ Executado / implementado
+- [x] **Etapa 1 — Supabase + ingestão**: migração `supabase/migrations/20260908_chat_docs.sql` (tabela `chat_docs` pgvector 1024 + HNSW cosine + rpc `match_chat_docs` fallback `pt`) · devDep `js-yaml` (v5 — import ESM usa **named export** `{ load }`) · script npm `ingest` + `scripts/ingest-resume.mjs` (front-matter → chunks, embeddings por REST `@cf/baai/bge-m3`, delete-then-insert idempotente)
+- [x] **Migração aplicada no SQL Editor** do Supabase — 2026-09-09 (usuário)
+- [x] **Ingestão rodada** — `npm run ingest`: **30 linhas em `chat_docs`** (5.5s); `match_chat_docs` validado com embedding real ("O que você faz?" → dados_pessoais/resumo/experiencia)
+- [x] **Etapa 2 — Worker `POST /chat`**: `worker/src/rag.ts` (embed `bge-m3` via binding `AI`, retrieve `match_chat_docs` top-6, askGroq **`groq/compound-mini`**, buildSystemPrompt c/ serviços públicos sem preço + handoff WhatsApp/orçamento) · `Env` + `AI`/`GROQ_API_KEY` · `wrangler.toml` binding `[ai]` + secret note · tsconfig experimental types · rate-limit 20/h (`checkRate` generalizado) · 422/503 graceful
+- [x] **Etapa 3 — Frontend**: `chatWithBot()` (fallback demo pt/en/es) · i18n `chat.*` pt/en/es · `ChatBot.tsx` (FAB `z-[58]`, painel bottom-sheet + backdrop, bolhas/timestamps/typing, chips 1ª abertura, histórico sessionStorage, handoff WhatsApp + **QuoteModal**, focus-trap/Escape) · barrel + `<ChatBot />` montado no App (próximo do CookieConsent)
+- [x] **Avatar do assistente** — `public/images/chat/assistant-avatar.jpeg` (renomeado/movido da raiz `Gemini_Generated_Image_k82zw8k82zw8k82z.jpeg`; 896×1196 @697KB) e usado no header do chat (`img` circular `object-cover` 36px, no lugar do monograma "LC")
+- [x] **Etapa 4 — Verificação**: typecheck front+worker · lint (arquivos editados) · build · `wrangler deploy --dry-run` (binding `AI` OK) · CORS `localhost:5173`/`127.0.0.1:5173` liberado (preflight OPTIONS 204) · resposta real 200 (~4s) · handoff de preço 200 (~3s) · 503 sem key · 422 msg vazia · lang inválida cai p/ `pt`
+- [x] **Etapa 5 — Docs/versionamento**: `.env.example` (+`SERVICE_ROLE_KEY`/`GROQ_API_KEY`) · `CHANGELOG.md` `[1.23.0]` · `README.md` seção "Chatbot IA (RAG)" com **mermaid** (sequence + flowchart) · `package.json`/lock → 1.23.0 · `TODO.md`
+- [x] **Ajustes de ambiente (2026-09-09)**
+  - Token Cloudflare no `.env.local` ganhou permissão **Workers AI:Edit** no painel (antes: 401 `Authentication error` em `/ai/run`)
+  - `llama-3.1-8b-instant` **descontinuado** na conta Groq → trocado p/ **`groq/compound-mini`** (testei `openai/gpt-oss-20b` e `qwen/qwen3.8-27b`; escolhi o nativo Groq). Commit `6f527f4`
+  - Experiência Windows: `taskkill /PID <pai> /T /F` p/ matar árvore `wrangler`→`workerd` (zumbis seguravam a porta 8787); watcher do Vite dá **EBUSY** em rename de arquivo — reiniciar o `npm run dev`
+  - `.gitignore` do worker ganhou `.wrangler/` (commit `d7166a9`)
+
+### 🔬 Registro de validação (2026-09-09)
+- `npm run ingest`: 30/30 chunks → embed OK → 30 linhas em `chat_docs`
+- `wrangler dev --remote` + curl `POST /chat`: 200 real ("Lucas é Analista de Dados... dashboards, pipelines, chatbots..." em 4.1s); preço → recusa + handoff (3.1s)
+- Widget **no navegador ainda mostrava "Não consegui responder agora"** porque o `VITE_WORKER_URL` do `.env.local` apontava p/ o Worker de **produção** (que não tem `/chat` → 404). **Corrigido**: `VITE_WORKER_URL=http://127.0.0.1:8787` (ver Pendências — reverter) + `wrangler dev --remote --port 8787` + reiniciar `npm run dev`
+
+### 🚧 Pendências / próximos passos
+- [ ] ⏳ **Testar o widget no navegador** com o Worker local de pé: iniciar `wrangler dev --remote --port 8787` em `worker/`, `npm run dev`, abrir `http://localhost:5173/portfolio-cavalcante/` → FAB → perguntar (vê a resposta real da Groq + avatar)
+- [ ] ⏳ **Alimentar o RAG com chunks das minhas informações** — a ingestão v1 só cobre o `curriculo-fonte.md` (~30 chunks PT). Ampliar o corpus do `chat_docs` com mais conhecimento pessoal/profissional (ex.: FAQ do site, projetos detalhados, serviços em profundidade, metodologias, experiências completas) e manter ingestão **incremental** (delete-then-insert por fonte; suportar pt/en/es e idempotência multi-fonte)
+- [ ] ⏳ **Guardrails para o chat** — escopo rígido (responder só do conhecimento autorizado; fora de escopo → handoff), não vazar prompts/sistema, não produzir conteúdo sensível/ilegal/PII, instruções contra jailbreak/prompt-injection, logging/login de violações, fallback para atendimento humano (WhatsApp/orçamento); definir medição de qualidade das respostas
+- [ ] ⏳ **Reverter `VITE_WORKER_URL`** no `.env.local` p/ `https://portfolio-cavalcante-worker.cavalcanteprofissional.workers.dev` após terminar o teste local
+- [ ] ⏳ **Deploy em produção**: `git push` → Actions (`npm run typecheck`, lint, build, `wrangler deploy`) e depois **`wrangler secret put GROQ_API_KEY`** (no `worker/`; secret persiste no CI)
+- [ ] ⏳ **Rotacionar `service_role`** (chave exposta 2× no chat — recomendo antes/logo após o push; atualizar `.env.local` + `wrangler secret put SERVICE_ROLE_KEY` se rotacionar)
+- [ ] ⏳ **Otimizar avatar** (opcional): reduzir `assistant-avatar.jpeg` 896×1196 @697KB p/ ~256px webp (`sharp` já é devDep)
 
 ---
 

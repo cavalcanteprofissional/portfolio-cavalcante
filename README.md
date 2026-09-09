@@ -41,6 +41,7 @@ Meu portfólio pessoal — projetos, experimentos e um pouco do que sei fazer co
 | **Cards de projeto** | Demo, código e status (🟢 concluído / 🟡 em andamento) com badges de progresso |
 | **TechStack real** | Baseado nos projetos do GitHub, agrupado em 6 categorias |
 | **Currículo automático** | Pipeline Python gera PDFs em PT/EN/ES via mBART-large-50 + Playwright |
+| **Chatbot IA (RAG)** | Widget estilo WhatsApp respondendo do currículo via pgvector + Groq (veja [Chatbot IA (RAG)](#chatbot-ia-rag)) |
 | **FAQ estruturada** | Dados JSON-LD para rich results no Google |
 | **Acessibilidade** | Skip-to-content, reduced-motion, aria-labels |
 | **Performance** | Lazy loading, code splitting, WebP otimizado |
@@ -58,6 +59,7 @@ Meu portfólio pessoal — projetos, experimentos e um pouco do que sei fazer co
 | **i18n** | i18next + react-i18next |
 | **Ícones** | Lucide React + React Icons |
 | **Backend** | Cloudflare Worker (TypeScript) + Supabase (Postgres + Auth) |
+| **IA (RAG)** | Cloudflare Workers AI (`@cf/baai/bge-m3`) · Supabase pgvector (HNSW) · Groq (`groq/compound-mini`) |
 | **Email/PDF** | Brevo + pdf-lib |
 | **Analytics** | Umami (consent-gated) |
 | **Currículo** | Python + mBART-large-50 + Jinja2 + Playwright |
@@ -127,6 +129,99 @@ npx wrangler deploy     # deploy
 > ⚠️ **Segurança:** credenciais secretas só entram via `wrangler secret put`, nunca no chat nem no bundle. O `service_role` antigo (postado em chat) foi tratado como comprometido e deve ser rotacionado.
 
 O schema do banco fica em `supabase/schema.sql` (RLS restritivo: `services` é leitura pública; `orcamentos` só o Worker acessa via `service_role`).
+
+## Chatbot IA (RAG)
+
+O site tem um assistente virtual estilo **WhatsApp** (FAB no canto inferior direito) que
+responde dúvidas sobre o currículo usando **RAG** (*Retrieval-Augmented Generation*): a
+pergunta é convertida em **embedding**, os trechos mais relevantes do currículo são buscados
+por **similaridade vetorial** (pgvector) e a resposta é gerada pela **Groq** usando
+exclusivamente esse contexto.
+
+### Fluxo (sequência)
+
+```mermaid
+sequenceDiagram
+    participant U as Usuário
+    participant F as Frontend (ChatBot.tsx)
+    participant W as Cloudflare Worker
+    participant AI as Workers AI
+    participant DB as Supabase (pgvector)
+    participant G as Groq
+
+    U->>F: pergunta (pt/en/es)
+    F->>W: POST /chat {message, lang, history}
+    W->>W: validação + rate-limit (20/h)
+    W->>AI: embed(message) — @cf/baai/bge-m3
+    AI-->>W: vetor 1024 dims
+    W->>DB: rpc match_chat_docs(vetor, top-k=6, lang)
+    DB-->>W: chunks relevantes do currículo
+    W->>W: buildSystemPrompt(contexto + serviços, sem preços)
+    W->>G: chat.completions — groq/compound-mini
+    G-->>W: resposta
+    W-->>F: { answer }
+    F-->>U: bolha + avatar do assistente
+```
+
+### Arquitetura
+
+```mermaid
+flowchart LR
+    subgraph FE["Frontend (React)"]
+        CB["ChatBot.tsx<br/>FAB z-58 · painel · histórico sessionStorage"]
+        API["lib/api.ts<br/>chatWithBot()"]
+    end
+    subgraph WK["Cloudflare Worker"]
+        R["rag.ts<br/>embed · retrieve · prompt · askGroq"]
+        RT["/chat<br/>rate-limit 20/h · validação"]
+        SRV["listPublicServices<br/>(sem preços)"]
+    end
+    subgraph SW["Supabase"]
+        PG["chat_docs<br/>pgvector 1024 · HNSW cosine"]
+        FN["match_chat_docs<br/>(fallback pt)"]
+    end
+    subgraph IA["Provedores"]
+        WAI["Workers AI<br/>@cf/baai/bge-m3"]
+        GQ["Groq<br/>groq/compound-mini"]
+        WA["WhatsApp / orçamento<br/>(handoff)"]
+    end
+
+    API --> RT
+    RT --> R
+    R --> WAI
+    R --> PG --> FN
+    FN --> R
+    R --> SRV
+    R --> GQ
+    R --> WA
+```
+
+### Conhecimento (chunks)
+
+As informações vêm de `resume/curriculo-fonte.md` e a migração
+`supabase/migrations/20260908_chat_docs.sql` cria a tabela `chat_docs` (pgvector 1024 +
+índice HNSW cosine) e a função `match_chat_docs` (com fallback para `pt`). A ingestão gera
+chunks por seção do currículo (dados, resumo, experiência, formação, certificações,
+habilidades, idiomas) e embeddings via REST do Workers AI — delete-then-insert idempotente:
+
+```bash
+npm run ingest   # front-matter → ~30 chunks PT → bge-m3 → 30 linhas em chat_docs (~6s)
+```
+
+Requer `SERVICE_ROLE_KEY`, `CLOUDFLARE_ACCOUNT_ID` e `CLOUDFLARE_API_TOKEN` no `.env.local`
+(o token Cloudflare precisa da permissão **Workers AI:Edit**).
+
+### Limites atuais & segurança
+
+- **Rate limit**: 20 mensagens/h por IP (`Retry-After` no 429) — orçamento free-tier.
+- **Contexto restrito**: o sistema de prompt manda responder só com o contexto + serviços
+  públicos; **não inventa preços** e faz handoff para WhatsApp/orçamento.
+- **Sem chave Groq**: responde 503 amigável (o front cai no fallback demo).
+- **Secrets**: `GROQ_API_KEY` e `SERVICE_ROLE_KEY` só no Worker (`wrangler secret put`);
+  `chat_docs` `match_chat_docs` liberadas p/ anon via grant público (sem RLS — leitura de
+  chunks não é sensível, embedding fica no servidor).
+- > Pendências de guardrails e de alimentar o RAG com mais dados pessoais estão
+  registradas no [TODO.md](TODO.md) (Onda 1.23).
 
 ## Arquitetura
 
