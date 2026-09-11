@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useTranslation } from 'react-i18next';
-import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
+import { MessageCircle, X, Send, Loader2, RotateCw } from 'lucide-react';
+import Markdown from 'react-markdown';
+import type { Components } from 'react-markdown';
 import { EASE, DURATION } from '../lib/motion';
 import { chatWithBot } from '../lib/api';
 import type { ChatMessage } from '../lib/api';
@@ -11,6 +13,31 @@ import { QuoteModal } from './QuoteModal';
 const PAD = 'https://wa.me/5585996859051';
 const STORAGE_KEY = 'portfolio-chat-history';
 const HISTORY_MAX = 10;
+const MESSAGE_MAX = 2000;
+const STREAM_MIN_MS = 600;
+const STREAM_MAX_MS = 4000;
+
+function firstChunk(text: string, wordCount: number): string {
+  if (wordCount <= 1) return text;
+  return text.split(/(\s+)/).slice(0, 1).join('');
+}
+function countWords(text: string): number {
+  const parts = text.split(/(\s+)/);
+  return parts.filter((_, i) => i % 2 === 0).length;
+}
+
+const mdComponents: Components = {
+  a: ({ href, children }) => (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="underline text-primary hover:opacity-80 break-words"
+    >
+      {children}
+    </a>
+  ),
+};
 
 interface Bubble {
   id: string;
@@ -18,6 +45,7 @@ interface Bubble {
   content: string;
   ts: number;
   error?: boolean;
+  replyTo?: string;
 }
 
 function nanoid(): string {
@@ -28,6 +56,75 @@ function nanoid(): string {
   }
 }
 
+// Revela a resposta palavra a palavra (preservando quebras de linha), com cursor
+// pulsante. onTick roda a cada passo (p/ auto-scroll) e onDone no fim.
+function StreamingBubble({
+  text,
+  onDone,
+  onTick,
+}: {
+  text: string;
+  onDone: () => void;
+  onTick?: () => void;
+}) {
+  const wordCount = useMemo(() => countWords(text), [text]);
+  const [shown, setShown] = useState(() => firstChunk(text, countWords(text)));
+
+  const doneRef = useRef(false);
+  const onDoneRef = useRef(onDone);
+
+  useEffect(() => {
+    onDoneRef.current = onDone;
+  }, [onDone]);
+
+  useEffect(() => {
+    if (wordCount <= 1) {
+      const id = window.setTimeout(() => {
+        if (!doneRef.current) {
+          doneRef.current = true;
+          setShown(text);
+          onDoneRef.current();
+        }
+      }, 0);
+      return () => window.clearTimeout(id);
+    }
+
+    const parts = text.split(/(\s+)/); // [palavra, espaço, palavra, ...]
+    const total = Math.min(STREAM_MAX_MS, STREAM_MIN_MS + wordCount * 70);
+    const step = total / wordCount;
+    let i = 2; // palavra 1 já exibida no estado inicial
+
+    const id = window.setInterval(() => {
+      setShown(parts.slice(0, i * 2 - 1).join(''));
+      i += 1;
+      onTick?.();
+      if (i > wordCount) {
+        window.clearInterval(id);
+        if (!doneRef.current) {
+          doneRef.current = true;
+          setShown(text);
+          onDoneRef.current();
+        }
+      }
+    }, step);
+
+    return () => window.clearInterval(id);
+  }, [text, wordCount, onTick]);
+
+  const finished = shown === text;
+  return (
+    <div className="break-words">
+      <Markdown components={mdComponents}>{shown}</Markdown>
+      {!finished && (
+        <span
+          aria-hidden
+          className="inline-block w-[3px] h-4 ml-0.5 align-middle bg-primary/80 animate-pulse"
+        />
+      )}
+    </div>
+  );
+}
+
 export function ChatBot() {
   const { t, i18n } = useTranslation();
   const lang = i18n.resolvedLanguage === 'en' ? 'en' : i18n.resolvedLanguage === 'es' ? 'es' : 'pt';
@@ -36,6 +133,7 @@ export function ChatBot() {
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [quoteOpen, setQuoteOpen] = useState(false);
+  const [live, setLive] = useState<{ id: string; content: string; ts: number } | null>(null);
   const [bubbles, setBubbles] = useState<Bubble[]>(() => {
     try {
       const raw = sessionStorage.getItem(STORAGE_KEY);
@@ -61,6 +159,11 @@ export function ChatBot() {
       // storage indisponível — histórico só em memória
     }
   }, [bubbles]);
+
+  const scrollToBottom = useCallback(() => {
+    const el = listRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, []);
 
   const handleClose = useCallback(() => {
     setQuoteOpen(false);
@@ -120,33 +223,58 @@ export function ChatBot() {
 
   // Auto-scroll ao fim
   useEffect(() => {
-    const el = listRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [bubbles, sending, open]);
+    scrollToBottom();
+  }, [bubbles, sending, live, open, scrollToBottom]);
 
-  async function send(raw?: string) {
+  const requestAnswer = useCallback(
+    (text: string, history: ChatMessage[]) => {
+      setSending(true);
+      chatWithBot(text, lang, history)
+        .then((answer) => setLive({ id: nanoid(), content: answer, ts: Date.now() }))
+        .catch(() => {
+          setBubbles((prev) => [
+            ...prev,
+            {
+              id: nanoid(),
+              role: 'assistant',
+              content: t('chat.error'),
+              ts: Date.now(),
+              error: true,
+              replyTo: text,
+            },
+          ]);
+          setSending(false);
+        });
+    },
+    [lang, t],
+  );
+
+  function send(raw?: string) {
     const text = (raw ?? input).trim();
-    if (!text || sending) return;
+    if (!text || sending || live) return;
     setInput('');
     setBubbles((prev) => [...prev, { id: nanoid(), role: 'user', content: text, ts: Date.now() }]);
-    setSending(true);
-
     const history: ChatMessage[] = bubbles
       .filter((b) => !b.error)
       .slice(-HISTORY_MAX)
       .map((b) => ({ role: b.role, content: b.content }));
+    requestAnswer(text, history);
+  }
 
-    try {
-      const answer = await chatWithBot(text, lang, history);
-      setBubbles((prev) => [...prev, { id: nanoid(), role: 'assistant', content: answer, ts: Date.now() }]);
-    } catch {
-      setBubbles((prev) => [
-        ...prev,
-        { id: nanoid(), role: 'assistant', content: t('chat.error'), ts: Date.now(), error: true },
-      ]);
-    } finally {
-      setSending(false);
-    }
+  function finishLive(id: string, content: string) {
+    setBubbles((prev) => [...prev, { id, role: 'assistant', content, ts: Date.now() }]);
+    setLive(null);
+    setSending(false);
+  }
+
+  function retry(b: Bubble) {
+    if (!b.replyTo || sending || live) return;
+    setBubbles((prev) => prev.filter((x) => x.id !== b.id));
+    const history: ChatMessage[] = bubbles
+      .filter((x) => x.id !== b.id && !x.error)
+      .slice(-HISTORY_MAX)
+      .map((x) => ({ role: x.role, content: x.content }));
+    requestAnswer(b.replyTo, history);
   }
 
   const waHref = `${PAD}?text=${encodeURIComponent(t('cta.whatsappMsg'))}`;
@@ -158,6 +286,8 @@ export function ChatBot() {
     'px-3.5 py-2 rounded-full border border-border bg-secondary/50 text-sm text-muted-foreground hover:border-primary/40 hover:text-foreground transition-all';
   const pillCls =
     'inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium border border-border transition-all';
+  const bubbleUserCls = 'max-w-[85%] px-4 py-2.5 rounded-2xl text-sm whitespace-pre-wrap break-words shadow-sm bg-primary text-primary-foreground rounded-br-sm';
+  const bubbleAssistantCls = 'max-w-[85%] px-4 py-2.5 rounded-2xl text-sm shadow-sm bg-secondary text-foreground rounded-bl-sm';
 
   return (
     <>
@@ -241,14 +371,24 @@ export function ChatBot() {
 
                     {bubbles.map((b) => (
                       <div key={b.id} className={`flex ${b.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div
-                          className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-sm whitespace-pre-wrap shadow-sm ${
-                            b.role === 'user'
-                              ? 'bg-primary text-primary-foreground rounded-br-sm'
-                              : 'bg-secondary text-foreground rounded-bl-sm'
-                          } ${b.error ? 'opacity-85' : ''}`}
-                        >
-                          {b.content}
+                        <div className={b.role === 'user' ? bubbleUserCls : bubbleAssistantCls}>
+                          {b.role === 'user' ? (
+                            b.content
+                          ) : b.error ? (
+                            <>
+                              {b.content}
+                              <button
+                                type="button"
+                                onClick={() => retry(b)}
+                                className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border border-border text-muted-foreground hover:border-primary/40 hover:text-foreground transition-all"
+                              >
+                                <RotateCw className="w-3 h-3" />
+                                {t('chat.retry')}
+                              </button>
+                            </>
+                          ) : (
+                            <Markdown components={mdComponents}>{b.content}</Markdown>
+                          )}
                           <span className={`block mt-1 text-[10px] ${b.role === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
                             {time(b.ts)}
                           </span>
@@ -256,7 +396,22 @@ export function ChatBot() {
                       </div>
                     ))}
 
-                    {sending && (
+                    {live && (
+                      <div className="flex justify-start">
+                        <div className={`${bubbleAssistantCls} opacity-90`}>
+                          <StreamingBubble
+                            text={live.content}
+                            onDone={() => finishLive(live.id, live.content)}
+                            onTick={scrollToBottom}
+                          />
+                          <span className="block mt-1 text-[10px] text-muted-foreground">
+                            {time(live.ts)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {sending && !live && (
                       <div className="flex justify-start">
                         <div
                           className="flex items-center gap-1 px-4 py-3 rounded-2xl rounded-bl-sm bg-secondary text-foreground"
@@ -270,8 +425,15 @@ export function ChatBot() {
                     )}
                   </div>
 
+                  {/* Contador de caracteres */}
+                  {input.length > 0 && (
+                    <div className="px-5 text-right -mt-1 text-[10px] text-muted-foreground/70">
+                      {input.length}/{MESSAGE_MAX}
+                    </div>
+                  )}
+
                   {/* Handoff + input */}
-                  <div className="px-4 pb-2 flex items-center justify-center gap-2">
+                  <div className="px-4 pt-2 flex items-center justify-center gap-2">
                     <a href={waHref} target="_blank" rel="noopener noreferrer" className={`${pillCls} text-foreground hover:border-primary/40`}>
                       <MessageCircle className="w-3.5 h-3.5" />
                       {t('chat.handoffWhatsApp')}
@@ -284,7 +446,7 @@ export function ChatBot() {
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
-                      void send();
+                      send();
                     }}
                     className="flex items-center gap-2 px-4 py-3 border-t border-border"
                   >
@@ -293,7 +455,7 @@ export function ChatBot() {
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       placeholder={t('chat.placeholder')}
-                      maxLength={2000}
+                      maxLength={MESSAGE_MAX}
                       aria-label={t('chat.placeholder')}
                       className="flex-1 px-4 py-2.5 rounded-full bg-secondary/50 border border-border focus:outline-none focus:border-primary/50 text-sm"
                     />

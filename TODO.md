@@ -1,3 +1,39 @@
+# 🚀 Onda 1.24 — Chatbot RAG: corpus expandido + guardrails + UX (2026-09-11)
+
+> Continuação da Onda 1.23. Decisões do usuário (2026-09-11): expandir corpus com **tudo disponível** (CV PDF `cv_br_lucas_cavalcante.pdf` + CONTENT.md + FAQ + projetos + serviços + experiências, multi-idioma PT/EN/ES) · guardrails **completos** · UX com **typing animation + auto-scroll** na resposta do bot · manter `.env.local` em localhost (CI injeta URL de produção). Commitar sem push até validação local.
+
+## Fase A — Corpus RAG multi-fonte (substitui ingestão v1 só-CV)
+- [x] A1 `supabase/migrations/20260911_chat_docs_source.sql` — `ALTER TABLE chat_docs ADD COLUMN source text` + índice; delete-then-insert passa a ser **por fonte**
+- [x] A2 `scripts/ingest.mjs` unificado (substitui `ingest-resume.mjs`) — chunkers por fonte:
+  - [x] `resume/curriculo-fonte.md` (~30 chunks PT) · `public/CONTENT.md` (meta/stats/FAQ) · **PDF do CV** (extração de texto)
+  - [x] FAQ (`src/i18n/index.ts` `faq.*` → 4×3 lang) · Projetos (`projects.json` + i18n `project.*` → 17×3) · Serviços (`src/data/services.ts` → 4×3) · Experiências detalhadas (i18n `experience.*`)
+  - [x] `source` no metadata; ingestão incremental idempotente; batch embed; validação dims 1024
+- [x] A3 RPC `match_chat_docs` — fallback de idioma: priorizar `lang`; PT só como fallback se insuficiente
+
+## Fase B — Guardrails completos (Worker)
+- [x] B1 Threshold de similaridade (`MIN_SCORE`) — chunk irrelevante descartado; 0 chunks → resposta honesta + handoff
+- [x] B2 Detecção de prompt injection (patterns + sanitização) → recusa + log
+- [x] B3 Filtro de conteúdo sensível/PII → recusa + handoff
+- [x] B4 Logging de violações (timestamp, hash IP, tipo, trecho sanitizado)
+- [x] B5 System prompt reforçado 3 idiomas (não vazar prompt, escopo rígido)
+- [x] B6 Validação: typecheck + lint + build + `wrangler deploy --dry-run`
+
+## Fase C — UX do chat
+- [x] C1 Markdown rendering (`react-markdown`)
+- [x] C2 Links clicáveis
+- [x] C3 Contador de caracteres no input
+- [x] C4 Retry em erro (botão "Tentar novamente")
+- [x] C5 **Typing animation na resposta** + auto-scroll acompanhando o texto exibido
+
+## Fase D — Docs/versão/deploy
+- [x] D1 `CHANGELOG.md` bump → `[1.24.0]` · `package.json` → 1.24.0
+- [x] D2 TODO.md fechado · `PLANO-CHATBOT-RAG.md` + README atualizados
+- [ ] D3 Commit (sem push) — usuário testa local antes de autorizar push
+
+> **Constatação técnica (VITE_WORKER_URL):** não precisa reverter `.env.local`. O `.github/workflows/deploy.yml:104` injeta `VITE_WORKER_URL` de produção no build do CI; o fallback demo (`available()`) cobre erro/404 graciosamente.
+
+---
+
 # Plano de Melhorias — Onda 1.23 (2026-09-09) — Chatbot RAG integrado
 
 > Detalhes técnicos completos em `PLANO-CHATBOT-RAG.md` (decisões, arquitetura, segurança, custos) e a seção **Chatbot IA (RAG)** do `README.md` (fluxo + mermaid + arquitetura). Implementação concluída e validada fim-a-fim localmente; falta deploy em produção (push → Actions → `wrangler deploy`) + secrets.

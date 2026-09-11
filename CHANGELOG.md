@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.24.0] - 2026-09-11
+
+### 🤖 Chatbot RAG: corpus expandido + guardrails + UX (Onda 1.24)
+
+- 📚 **Corpus multi-fonte** (`scripts/ingest.mjs`, substitui `ingest-resume.mjs`) — 7 fontes, ~159 chunks:
+  `curriculo` (PT, front-matter do CV), `cv-pdf` (PT, extração `pdf-parse` do
+  `resume/cv_br_lucas_cavalcante.pdf`), `content` (CONTENT.md: meta/stats/empresas/disponibilidade),
+  `faq`, `projetos`, `servicos` e `experiencias` em **pt/en/es** (via `src/i18n` + `projects.json` + `services.ts`,
+  importados nativamente pelo Node 24). Dedupe por texto normalizado; ingestão **incremental** (delete-then-insert por fonte)
+- 📦 **Migração `20260911_chat_docs_source.sql`** — coluna `source` + índices; `match_chat_docs` reescrito (plpgsql):
+  prioriza o idioma pedido e **completa com `pt` só como fallback** (antes misturava pt/en/es no top-K)
+- 🛡️ **Guardrails no Worker** — `MIN_SCORE` 0.30 (descarta chunks irrelevantes), detecção de **prompt injection** e de
+  **conteúdo sensível** (respondidas com texto neutro + `logViolation` estruturado no console), prompt de sistema blindado
+  contra mudanças de instrução (pt/en/es) e validação pós-geração da resposta
+- 💬 **UX do ChatBot** — respostas renderizadas em **Markdown** (`react-markdown`), links clicáveis (`target=_blank`),
+  **typing animation** palavra a palavra com cursor (600ms–4s, preserva quebras de linha + auto-scroll), botão **tentar
+  novamente** no erro, **contador de caracteres** (2000), novas chaves i18n `chat.retry` (pt/en/es)
+- ✅ **Validação** — `node scripts/ingest.mjs --list` → 159 chunks/7 fontes; typecheck, lint, build e `wrangler deploy --dry-run` limpos; ingest real pendente de rotação da `SERVICE_ROLE_KEY`
+
 ## [1.23.0] - 2026-09-09
 
 ### 🤖 Chatbot RAG integrado (Onda 1.23)

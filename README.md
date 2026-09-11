@@ -198,30 +198,36 @@ flowchart LR
 
 ### Conhecimento (chunks)
 
-As informações vêm de `resume/curriculo-fonte.md` e a migração
-`supabase/migrations/20260908_chat_docs.sql` cria a tabela `chat_docs` (pgvector 1024 +
-índice HNSW cosine) e a função `match_chat_docs` (com fallback para `pt`). A ingestão gera
-chunks por seção do currículo (dados, resumo, experiência, formação, certificações,
-habilidades, idiomas) e embeddings via REST do Workers AI — delete-then-insert idempotente:
+As informações vêm de **7 fontes** (`scripts/ingest.mjs`, Onda 1.24): `curriculo`
+(`resume/curriculo-fonte.md`) · `cv-pdf` (`resume/cv_br_lucas_cavalcante.pdf` via `pdf-parse`) ·
+`content` (`CONTENT.md`: meta/stats/empresas/disponibilidade) · `faq` · `projetos` · `servicos` ·
+`experiencias` — em **pt/en/es** (≈159 chunks). A migração `20260908_chat_docs.sql` cria a tabela
+`chat_docs` (pgvector 1024 + HNSW cosine) e a `20260911_chat_docs_source.sql` adiciona a coluna
+`source` + fallback de idioma: **prioriza `lang`, completando com `pt` só se faltar**. A ingestão
+gera chunks, embeddings via REST do Workers AI (`@cf/baai/bge-m3`) e faz **delete-then-insert
+por fonte** (idempotente):
 
 ```bash
-npm run ingest   # front-matter → ~30 chunks PT → bge-m3 → 30 linhas em chat_docs (~6s)
+node scripts/ingest.mjs --list  # pré-visualiza fontes/chunks sem persistir
+npm run ingest                  # curriculo + cv-pdf + content + faq + projetos + servicos + experiencias
 ```
 
 Requer `SERVICE_ROLE_KEY`, `CLOUDFLARE_ACCOUNT_ID` e `CLOUDFLARE_API_TOKEN` no `.env.local`
-(o token Cloudflare precisa da permissão **Workers AI:Edit**).
+(o token Cloudflare precisa da permissão **Workers AI:Edit**) e a migração `20260911_chat_docs_source.sql`
+aplicada no SQL Editor do Supabase.
 
 ### Limites atuais & segurança
 
 - **Rate limit**: 20 mensagens/h por IP (`Retry-After` no 429) — orçamento free-tier.
+- **Guardrails (Onda 1.24)**: `MIN_SCORE` 0.30 descarta chunks irrelevantes; **prompt injection**
+  e **conteúdo sensível** são bloqueados antes do RAG (resposta neutra + `logViolation` estruturado);
+  system prompt blindado (pt/en/es) e `validateAnswer` pós-geração.
 - **Contexto restrito**: o sistema de prompt manda responder só com o contexto + serviços
   públicos; **não inventa preços** e faz handoff para WhatsApp/orçamento.
 - **Sem chave Groq**: responde 503 amigável (o front cai no fallback demo).
 - **Secrets**: `GROQ_API_KEY` e `SERVICE_ROLE_KEY` só no Worker (`wrangler secret put`);
   `chat_docs` `match_chat_docs` liberadas p/ anon via grant público (sem RLS — leitura de
   chunks não é sensível, embedding fica no servidor).
-- > Pendências de guardrails e de alimentar o RAG com mais dados pessoais estão
-  registradas no [TODO.md](TODO.md) (Onda 1.23).
 
 ## Arquitetura
 

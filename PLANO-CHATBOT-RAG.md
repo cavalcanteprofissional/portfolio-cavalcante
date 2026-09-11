@@ -1,5 +1,26 @@
 # Plano: Chatbot RAG integrado (estilo WhatsApp)
 
+> ## ▶️ Onda 1.24 (2026-09-11) — corpus expandido + guardrails + UX
+>
+> Implementado (commit pendente de validação local):
+> - **Corpus multi-fonte** — `scripts/ingest.mjs` (substitui `ingest-resume.mjs`): 7 fontes (~159
+>   chunks) = `curriculo` (PT) · `cv-pdf` (PT, `pdf-parse` no `resume/cv_br_lucas_cavalcante.pdf`) ·
+>   `content` (CONTENT.md) · `faq` · `projetos` · `servicos` · `experiencias` em **pt/en/es**
+>   (i18n + projects.json + services.ts importados nativamente pelo Node 24). Ingestão incremental
+>   (delete-then-insert por fonte) + dedupe por texto normalizado. Checagem local:
+>   `node scripts/ingest.mjs --list`.
+> - **Migração `20260911_chat_docs_source.sql`** (aplicar no SQL Editor) — coluna `source` +
+>   índices; `match_chat_docs` (plpgsql) prioriza `lang` e completa com **PT só como fallback**.
+> - **Guardrails no Worker** (`rag.ts`/`index.ts`) — `MIN_SCORE` 0.30 · detecção de prompt
+>   injection + conteúdo sensível (`detectInjection`/`detectSensitive`) com resposta neutra +
+>   `logViolation` (JSON estruturado) · system prompt blindado (pt/en/es) · `validateAnswer`.
+> - **UX do ChatBot** — `react-markdown` (links `_blank`), `StreamingBubble` palavra a palavra com
+>   cursor (600ms–4s, preserva quebras, auto-scroll via `onTick`), retry no erro (`chat.retry`),
+>   contador de caracteres.
+>
+> Validado: `--list` → 159 chunks/7 fontes; typecheck/lint/build/dry-run (B6) no release. Ingest
+> real aguarda rotação da `SERVICE_ROLE_KEY` (exposta no chat).
+
 > Documento de planejamento da **Onda 1.23** — integração de um chatbot com UI/UX
 > no padrão do portfolio, simulando uma aba de conversa estilo WhatsApp, com RAG
 > (chunking + embeddings + vector store).

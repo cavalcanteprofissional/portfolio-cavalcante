@@ -3,7 +3,7 @@ import { computeTotal } from './pricing';
 import { buildQuotePdf } from './pdf';
 import { sendEmail, buildClientEmail, buildOwnerNotice } from './email';
 import { shortCode } from './types';
-import { embed, retrieve, askGroq, buildSystemPrompt, sanitizeHistory, RagError } from './rag';
+import { embed, retrieve, askGroq, buildSystemPrompt, sanitizeHistory, RagError, detectInjection, detectSensitive, logViolation } from './rag';
 import type { ChatMessage } from './rag';
 import type { Ai } from '@cloudflare/workers-types/experimental';
 import type { OrcamentoRow, QuoteRequest } from './types';
@@ -385,6 +385,21 @@ export default {
         }
 
         if (!env.GROQ_API_KEY) return error('Chat temporariamente indisponível', 503);
+
+        // Guardrails (Onda 1.24): prompt injection e conteúdo sensível são bloqueados
+        // ANTES do RAG. Resposta neutra + log estruturado (sem sinalizar o atacante).
+        const injectionCode = detectInjection(message);
+        const sensitiveCode = detectSensitive(message);
+        if (injectionCode || sensitiveCode) {
+          if (injectionCode) logViolation('injection', injectionCode, message, ip);
+          if (sensitiveCode) logViolation('sensitive', sensitiveCode, message, ip);
+          const refusals: Record<string, string> = {
+            pt: 'Não consigo responder a isso. Posso ajudar com o portfólio, os projetos, os serviços e a minha experiência.',
+            en: "I can't help with that. I can answer questions about the portfolio, projects, services and experience.",
+            es: 'No puedo responder a eso. Puedo ayudar con el portafolio, los proyectos, los servicios y mi experiencia.',
+          };
+          return json({ answer: refusals[lang] });
+        }
 
         const history = sanitizeHistory(body?.history);
         const queryEmbedding = await embed(message, env);
