@@ -28,7 +28,8 @@
 ## Fase D — Docs/versão/deploy
 - [x] D1 `CHANGELOG.md` bump → `[1.24.0]` · `package.json` → 1.24.0
 - [x] D2 TODO.md fechado · `PLANO-CHATBOT-RAG.md` + README atualizados
-- [ ] D3 Commit (sem push) — usuário testa local antes de autorizar push
+- [x] D3 Commit + push — usuário validou o chat localmente no `wrangler dev --remote` (2026-09-11)
+- [x] D4 RPC `match_chat_docs` corrigida e **validada** (ambiguidade `lang` → `lang_filter`; `::real` no `RETURN QUERY`) · `supabase/` movido para o `.gitignore` (`git rm --cached`) — migrações ficam **locais**, aplicadas manualmente no SQL Editor
 
 > **Constatação técnica (VITE_WORKER_URL):** não precisa reverter `.env.local`. O `.github/workflows/deploy.yml:104` injeta `VITE_WORKER_URL` de produção no build do CI; o fallback demo (`available()`) cobre erro/404 graciosamente.
 

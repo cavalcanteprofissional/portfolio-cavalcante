@@ -128,7 +128,7 @@ npx wrangler deploy     # deploy
 
 > ⚠️ **Segurança:** credenciais secretas só entram via `wrangler secret put`, nunca no chat nem no bundle. O `service_role` antigo (postado em chat) foi tratado como comprometido e deve ser rotacionado.
 
-O schema do banco fica em `supabase/schema.sql` (RLS restritivo: `services` é leitura pública; `orcamentos` só o Worker acessa via `service_role`).
+O schema do banco (`supabase/schema.sql`, seed e migrações) fica em `supabase/`, **não versionado** (`.gitignore`), aplicado manualmente no SQL Editor do Supabase (RLS restritivo: `services` é leitura pública; `orcamentos` só o Worker acessa via `service_role`).
 
 ## Chatbot IA (RAG)
 
@@ -201,11 +201,11 @@ flowchart LR
 As informações vêm de **7 fontes** (`scripts/ingest.mjs`, Onda 1.24): `curriculo`
 (`resume/curriculo-fonte.md`) · `cv-pdf` (`resume/cv_br_lucas_cavalcante.pdf` via `pdf-parse`) ·
 `content` (`CONTENT.md`: meta/stats/empresas/disponibilidade) · `faq` · `projetos` · `servicos` ·
-`experiencias` — em **pt/en/es** (≈159 chunks). A migração `20260908_chat_docs.sql` cria a tabela
-`chat_docs` (pgvector 1024 + HNSW cosine) e a `20260911_chat_docs_source.sql` adiciona a coluna
-`source` + fallback de idioma: **prioriza `lang`, completando com `pt` só se faltar**. A ingestão
-gera chunks, embeddings via REST do Workers AI (`@cf/baai/bge-m3`) e faz **delete-then-insert
-por fonte** (idempotente):
+`experiencias` — em **pt/en/es** (≈159 chunks). No banco: a tabela `chat_docs` (pgvector 1024 +
+HNSW cosine) vem da migração `20260908_chat_docs.sql`, e a `20260911_chat_docs_source.sql` adiciona a
+coluna `source` + fallback de idioma: **prioriza `lang`, completando com `pt` só se faltar** (RPC
+`match_chat_docs` reescrita em plpgsql). As migrações ficam em `supabase/migrations/` **localmente**
+(não versionadas) e são aplicadas **manualmente no SQL Editor**. A ingestão gera chunks, embeddings via REST do Workers AI (`@cf/baai/bge-m3`) e faz **delete-then-insert por fonte** (idempotente):
 
 ```bash
 node scripts/ingest.mjs --list  # pré-visualiza fontes/chunks sem persistir
@@ -251,7 +251,7 @@ portfolio/
 ├── branding/           # fonte .ai da marca (só *.ai versionado)
 ├── scripts/            # generate-icons.mjs (npm run icons)
 ├── resume/             # pipeline de currículos (Python + mBART)
-├── supabase/           # schema.sql (tabelas + RLS)
+├── supabase/           # LOCAIS (não versionados): schema.sql (tabelas + RLS), seed, migrações
 ├── worker/             # Cloudflare Worker (API, PDF, Brevo)
 └── e2e/                # Playwright E2E tests
 ```

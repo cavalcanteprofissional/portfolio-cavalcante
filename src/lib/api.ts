@@ -86,10 +86,10 @@ async function wf<T>(path: string, init?: RequestInit): Promise<T> {
     res = await fetch(`${WORKER_URL}${path}`, { ...init, signal: controller.signal });
   } catch (err) {
     if (err instanceof DOMException && err.name === 'AbortError') {
-      throw new Error('Tempo limite excedido ao conectar ao servidor de orçamentos. Tente novamente.');
+      throw new Error('Tempo limite excedido ao conectar ao servidor. Tente novamente.');
     }
     throw new Error(
-      `Não foi possível conectar ao servidor de orçamentos (${WORKER_URL}). ` +
+      `Não foi possível conectar ao servidor (${WORKER_URL}). ` +
         `Verifique sua conexão ou o CORS — origem atual: ${window.location.origin}`,
     );
   } finally {

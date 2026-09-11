@@ -17,7 +17,13 @@
 - 💬 **UX do ChatBot** — respostas renderizadas em **Markdown** (`react-markdown`), links clicáveis (`target=_blank`),
   **typing animation** palavra a palavra com cursor (600ms–4s, preserva quebras de linha + auto-scroll), botão **tentar
   novamente** no erro, **contador de caracteres** (2000), novas chaves i18n `chat.retry` (pt/en/es)
-- ✅ **Validação** — `node scripts/ingest.mjs --list` → 159 chunks/7 fontes; typecheck, lint, build e `wrangler deploy --dry-run` limpos; ingest real pendente de rotação da `SERVICE_ROLE_KEY`
+- ✅ **Validação real (2026-09-11)** — `node scripts/ingest.mjs --list` → 159 chunks/7 fontes; typecheck, lint, build e `wrangler deploy --dry-run` limpos; ingest real pendente de rotação da `SERVICE_ROLE_KEY`
+- 🩺 **Diagnóstico de erro real** — bolha do chat mostra a mensagem original do servidor + `console.error` no `catch` do `requestAnswer`; mensagens de conexão/timeout do `wf()` generalizadas (sem "servidor de orçamentos")
+- 🔧 **Fix pós-teste real** — `POST /chat` 502 durante o `wrangler dev --remote`, resolvidos em 2 correções na RPC `match_chat_docs` (plpgsql), ambas achadas pelo diagnóstico:
+  1. `column reference "lang" is ambiguous` — `lang` é parâmetro **e** coluna do `chat_docs` → referências nuas disparam ambiguidade (na função SQL antiga passava por acidente, sem filtrar idioma). Correção: variável local `lang_filter`.
+  2. `structure of query does not match function result type` — `1 - (embedding <=> q)` é `double precision`, `returns` declarava `real` (em SQL havia coerção implícita; `RETURN QUERY` do plpgsql não faz downcast) → cast `::real` nos dois `RETURN QUERY`.
+  Assinatura/contrato RPC inalterados; função reaplicada no SQL Editor e **validada com query real** (`select ... from match_chat_docs(...)`), chat respondendo no `wrangler dev --remote`.
+- 🗂️ **`supabase/` fora do versionamento** — movido para o `.gitignore` e `git rm --cached`; migrações/schema ficam **locais** e são aplicadas manualmente no SQL Editor (decisão 2026-09-11)
 
 ## [1.23.0] - 2026-09-09
 

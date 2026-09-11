@@ -231,13 +231,15 @@ export function ChatBot() {
       setSending(true);
       chatWithBot(text, lang, history)
         .then((answer) => setLive({ id: nanoid(), content: answer, ts: Date.now() }))
-        .catch(() => {
+        .catch((err: unknown) => {
+          const msg = err instanceof Error ? err.message : String(err ?? '');
+          console.error('[chat] falha ao obter resposta:', msg);
           setBubbles((prev) => [
             ...prev,
             {
               id: nanoid(),
               role: 'assistant',
-              content: t('chat.error'),
+              content: msg || t('chat.error'),
               ts: Date.now(),
               error: true,
               replyTo: text,
