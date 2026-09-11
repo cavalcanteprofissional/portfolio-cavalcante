@@ -3,12 +3,13 @@
 > Continuação da Onda 1.23. Decisões do usuário (2026-09-11): expandir corpus com **tudo disponível** (CV PDF `cv_br_lucas_cavalcante.pdf` + CONTENT.md + FAQ + projetos + serviços + experiências, multi-idioma PT/EN/ES) · guardrails **completos** · UX com **typing animation + auto-scroll** na resposta do bot · manter `.env.local` em localhost (CI injeta URL de produção). Commitar sem push até validação local.
 
 ## Fase A — Corpus RAG multi-fonte (substitui ingestão v1 só-CV)
-- [x] A1 `supabase/migrations/20260911_chat_docs_source.sql` — `ALTER TABLE chat_docs ADD COLUMN source text` + índice; delete-then-insert passa a ser **por fonte**
+- [x] A1 Coluna `source` + índices no `chat_docs` (migração `20260911_chat_docs_source.sql` → **absorvida no `supabase/schema.sql`**); delete-then-insert passa a ser **por fonte**
 - [x] A2 `scripts/ingest.mjs` unificado (substitui `ingest-resume.mjs`) — chunkers por fonte:
   - [x] `resume/curriculo-fonte.md` (~30 chunks PT) · `public/CONTENT.md` (meta/stats/FAQ) · **PDF do CV** (extração de texto)
   - [x] FAQ (`src/i18n/index.ts` `faq.*` → 4×3 lang) · Projetos (`projects.json` + i18n `project.*` → 17×3) · Serviços (`src/data/services.ts` → 4×3) · Experiências detalhadas (i18n `experience.*`)
   - [x] `source` no metadata; ingestão incremental idempotente; batch embed; validação dims 1024
 - [x] A3 RPC `match_chat_docs` — fallback de idioma: priorizar `lang`; PT só como fallback se insuficiente
+- [x] A4 **Ingestão real executada** (2026-09-11) — `npm run ingest` → **159 chunks/7 fontes** no `chat_docs` (21.5s); **30 linhas órfãs da v1** (`source` NULL) removidas; `.env.local` já tinha as 4 chaves necessárias (`SERVICE_ROLE_KEY` antiga — rotação recomendada)
 
 ## Fase B — Guardrails completos (Worker)
 - [x] B1 Threshold de similaridade (`MIN_SCORE`) — chunk irrelevante descartado; 0 chunks → resposta honesta + handoff
@@ -29,7 +30,7 @@
 - [x] D1 `CHANGELOG.md` bump → `[1.24.0]` · `package.json` → 1.24.0
 - [x] D2 TODO.md fechado · `PLANO-CHATBOT-RAG.md` + README atualizados
 - [x] D3 Commit + push — usuário validou o chat localmente no `wrangler dev --remote` (2026-09-11)
-- [x] D4 RPC `match_chat_docs` corrigida e **validada** (ambiguidade `lang` → `lang_filter`; `::real` no `RETURN QUERY`) · `supabase/` movido para o `.gitignore` (`git rm --cached`) — migrações ficam **locais**, aplicadas manualmente no SQL Editor
+- [x] D4 RPC `match_chat_docs` corrigida e **validada** (ambiguidade `lang` → `lang_filter`; `::real` no `RETURN QUERY`) · `supabase/` movido para o `.gitignore` (`git rm --cached`) e reorganizado: `schema.sql` (DDL) + `rls.sql` (**RLS deny explícito** em `chat_docs`/`orcamentos` + grants/revokes) + `seed.sql`; migrações absorvidas/deletadas — aplicação manual no SQL Editor (schema → rls → seed)
 
 > **Constatação técnica (VITE_WORKER_URL):** não precisa reverter `.env.local`. O `.github/workflows/deploy.yml:104` injeta `VITE_WORKER_URL` de produção no build do CI; o fallback demo (`available()`) cobre erro/404 graciosamente.
 

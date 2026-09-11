@@ -9,21 +9,21 @@
   `resume/cv_br_lucas_cavalcante.pdf`), `content` (CONTENT.md: meta/stats/empresas/disponibilidade),
   `faq`, `projetos`, `servicos` e `experiencias` em **pt/en/es** (via `src/i18n` + `projects.json` + `services.ts`,
   importados nativamente pelo Node 24). Dedupe por texto normalizado; ingestão **incremental** (delete-then-insert por fonte)
-- 📦 **Migração `20260911_chat_docs_source.sql`** — coluna `source` + índices; `match_chat_docs` reescrito (plpgsql):
-  prioriza o idioma pedido e **completa com `pt` só como fallback** (antes misturava pt/en/es no top-K)
+- 📦 **Supabase — `schema.sql` (DDL) + `rls.sql` (RLS/privilégios) + `seed.sql`** — coluna `source` + índices; `match_chat_docs` reescrito (plpgsql):
+  prioriza o idioma pedido e **completa com `pt` só como fallback** (antes misturava pt/en/es no top-K). Absorve as migrações 20260830/20260908/20260911 (pasta removida)
 - 🛡️ **Guardrails no Worker** — `MIN_SCORE` 0.30 (descarta chunks irrelevantes), detecção de **prompt injection** e de
   **conteúdo sensível** (respondidas com texto neutro + `logViolation` estruturado no console), prompt de sistema blindado
   contra mudanças de instrução (pt/en/es) e validação pós-geração da resposta
 - 💬 **UX do ChatBot** — respostas renderizadas em **Markdown** (`react-markdown`), links clicáveis (`target=_blank`),
   **typing animation** palavra a palavra com cursor (600ms–4s, preserva quebras de linha + auto-scroll), botão **tentar
   novamente** no erro, **contador de caracteres** (2000), novas chaves i18n `chat.retry` (pt/en/es)
-- ✅ **Validação real (2026-09-11)** — `node scripts/ingest.mjs --list` → 159 chunks/7 fontes; typecheck, lint, build e `wrangler deploy --dry-run` limpos; ingest real pendente de rotação da `SERVICE_ROLE_KEY`
+- ✅ **Validação real (2026-09-11)** — `node scripts/ingest.mjs --list` → 159 chunks/7 fontes; typecheck, lint, build e `wrangler deploy --dry-run` limpos; **ingestão real executada** (`npm run ingest`) → **159 chunks/7 fontes** no `chat_docs` (21.5s; embeddings batch 8 via Workers AI `bge-m3`) + **limpeza de 30 linhas órfãs** da ingestão v1 (`source` NULL, anteriores à coluna `source`)
 - 🩺 **Diagnóstico de erro real** — bolha do chat mostra a mensagem original do servidor + `console.error` no `catch` do `requestAnswer`; mensagens de conexão/timeout do `wf()` generalizadas (sem "servidor de orçamentos")
 - 🔧 **Fix pós-teste real** — `POST /chat` 502 durante o `wrangler dev --remote`, resolvidos em 2 correções na RPC `match_chat_docs` (plpgsql), ambas achadas pelo diagnóstico:
   1. `column reference "lang" is ambiguous` — `lang` é parâmetro **e** coluna do `chat_docs` → referências nuas disparam ambiguidade (na função SQL antiga passava por acidente, sem filtrar idioma). Correção: variável local `lang_filter`.
   2. `structure of query does not match function result type` — `1 - (embedding <=> q)` é `double precision`, `returns` declarava `real` (em SQL havia coerção implícita; `RETURN QUERY` do plpgsql não faz downcast) → cast `::real` nos dois `RETURN QUERY`.
   Assinatura/contrato RPC inalterados; função reaplicada no SQL Editor e **validada com query real** (`select ... from match_chat_docs(...)`), chat respondendo no `wrangler dev --remote`.
-- 🗂️ **`supabase/` fora do versionamento** — movido para o `.gitignore` e `git rm --cached`; migrações/schema ficam **locais** e são aplicadas manualmente no SQL Editor (decisão 2026-09-11)
+- 🗂️ **`supabase/` fora do versionamento e reorganizado** (decisão 2026-09-11) — movido para o `.gitignore` (`git rm --cached`); migrações absorvidas/deletadas; agora: `schema.sql` (DDL puro) + **`rls.sql` (deny-by-default com policies explícitas em `chat_docs`/`orcamentos`)** + `seed.sql` (serviços idempotente), aplicados manualmente no SQL Editor na ordem **schema → rls → seed** (RLS: `service_role` do Worker bypasseia; anon/authenticated negados)
 
 ## [1.23.0] - 2026-09-09
 

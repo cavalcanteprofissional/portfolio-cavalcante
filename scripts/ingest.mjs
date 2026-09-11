@@ -13,8 +13,9 @@
 //   experiencias: src/i18n experience.* (pt/en/es)
 //
 // Ingestão INCREMENTAL: delete-then-insert POR FONTE (não apaga as demais),
-// idempotente. Requer migração 20260911_chat_docs_source.sql aplicada no
-// Supabase (coluna `source`).
+// idempotente. Requer o SQL Editor do Supabase na ordem: `supabase/schema.sql`
+// → `supabase/rls.sql` → `supabase/seed.sql` (tabela com coluna `source` e RLS
+// deny-all, que o script bypasseia via SERVICE_ROLE_KEY).
 //
 // Regra de segurança: SERVICE_ROLE_KEY é SECRETA — lida só de env/.env.local,
 // nunca commitada nem impressa.
@@ -551,7 +552,7 @@ async function ensureSourceColumn(db) {
     .limit(0);
   if (error && /source/.test(error.message)) {
     throw new Error(
-      'Coluna `source` ausente em chat_docs. Aplique supabase/migrations/20260911_chat_docs_source.sql no SQL Editor antes de rodar o ingest.',
+      'Coluna `source` ausente em chat_docs. Aplique `supabase/schema.sql` → `supabase/rls.sql` → `supabase/seed.sql` no SQL Editor antes de rodar o ingest.',
     );
   }
 }
@@ -692,14 +693,14 @@ async function main() {
     }));
     const { error: insErr } = await db.from('chat_docs').insert(rows);
     if (insErr) throw new Error(`[ingest] insert source=${source}: ${insErr.message}`);
-    console.log(`[ingest] ${source}: ${rows.length} linhas inseridas (${list.map((c) => c.lang).reduce((m, l) => (m[l] = (m[l] ?? 0) + 1, m), {})} por idioma).`);
+    console.log(`[ingest] ${source}: ${rows.length} linhas inseridas (${JSON.stringify(list.map((c) => c.lang).reduce((m, l) => (m[l] = (m[l] ?? 0) + 1, m), {}))} por idioma).`);
   }
 
   const { count, error: countErr } = await db.from('chat_docs').select('*', { count: 'exact', head: true });
   if (countErr) throw new Error(`[ingest] count: ${countErr.message}`);
 
   console.log(
-    `[ingest] OK — ${count ?? chunks.length} linhas em chat_docs (${sources.length} fontes, ${((Date.now() - start) / 1000).toFixed(1)}s).`,
+    `[ingest] OK — ${count ?? chunks.length} linhas em chat_docs (${new Set(sources).size} fontes, ${((Date.now() - start) / 1000).toFixed(1)}s).`,
   );
 }
 

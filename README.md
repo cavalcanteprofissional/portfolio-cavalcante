@@ -128,7 +128,10 @@ npx wrangler deploy     # deploy
 
 > ⚠️ **Segurança:** credenciais secretas só entram via `wrangler secret put`, nunca no chat nem no bundle. O `service_role` antigo (postado em chat) foi tratado como comprometido e deve ser rotacionado.
 
-O schema do banco (`supabase/schema.sql`, seed e migrações) fica em `supabase/`, **não versionado** (`.gitignore`), aplicado manualmente no SQL Editor do Supabase (RLS restritivo: `services` é leitura pública; `orcamentos` só o Worker acessa via `service_role`).
+O banco é definido em `supabase/` (**não versionado** — `.gitignore`), aplicado
+manualmente no SQL Editor do Supabase nesta ordem: `schema.sql` (objetos) → `rls.sql`
+(RLS deny-all + privilégios: `services` leitura pública via view `services_public`;
+`orcamentos`/`chat_docs` só o Worker acessa via `service_role`) → `seed.sql` (serviços).
 
 ## Chatbot IA (RAG)
 
@@ -201,11 +204,11 @@ flowchart LR
 As informações vêm de **7 fontes** (`scripts/ingest.mjs`, Onda 1.24): `curriculo`
 (`resume/curriculo-fonte.md`) · `cv-pdf` (`resume/cv_br_lucas_cavalcante.pdf` via `pdf-parse`) ·
 `content` (`CONTENT.md`: meta/stats/empresas/disponibilidade) · `faq` · `projetos` · `servicos` ·
-`experiencias` — em **pt/en/es** (≈159 chunks). No banco: a tabela `chat_docs` (pgvector 1024 +
-HNSW cosine) vem da migração `20260908_chat_docs.sql`, e a `20260911_chat_docs_source.sql` adiciona a
-coluna `source` + fallback de idioma: **prioriza `lang`, completando com `pt` só se faltar** (RPC
-`match_chat_docs` reescrita em plpgsql). As migrações ficam em `supabase/migrations/` **localmente**
-(não versionadas) e são aplicadas **manualmente no SQL Editor**. A ingestão gera chunks, embeddings via REST do Workers AI (`@cf/baai/bge-m3`) e faz **delete-then-insert por fonte** (idempotente):
+`experiencias` — em **pt/en/es** (≈159 chunks). No banco, `supabase/schema.sql` (fonte única,
+**não versionado**) cria a tabela `chat_docs` (pgvector 1024 + HNSW cosine, coluna `source`,
+RLS deny-all — só `service_role`) e a rpc `match_chat_docs` em plpgsql com fallback de idioma:
+**prioriza `lang`, completando com `pt` só se faltar**. Aplicado **manualmente no SQL Editor**
+na ordem `schema.sql` → `rls.sql` → `seed.sql`. A ingestão gera chunks, embeddings via REST do Workers AI (`@cf/baai/bge-m3`) e faz **delete-then-insert por fonte** (idempotente):
 
 ```bash
 node scripts/ingest.mjs --list  # pré-visualiza fontes/chunks sem persistir
@@ -213,8 +216,12 @@ npm run ingest                  # curriculo + cv-pdf + content + faq + projetos 
 ```
 
 Requer `SERVICE_ROLE_KEY`, `CLOUDFLARE_ACCOUNT_ID` e `CLOUDFLARE_API_TOKEN` no `.env.local`
-(o token Cloudflare precisa da permissão **Workers AI:Edit**) e a migração `20260911_chat_docs_source.sql`
-aplicada no SQL Editor do Supabase.
+(o token Cloudflare precisa da permissão **Workers AI:Edit**) e o
+`supabase/schema.sql` → `rls.sql` → `seed.sql` aplicados no SQL Editor.
+
+> **Estado atual (2026-09-11):** corpus **ingerido** — 159 chunks / 7 fontes no
+> `chat_docs`. Re-rode `npm run ingest` sempre que o CV/CONTENT.md/i18n mudarem
+> (delete-then-insert por fonte, idempotente).
 
 ### Limites atuais & segurança
 
@@ -226,8 +233,8 @@ aplicada no SQL Editor do Supabase.
   públicos; **não inventa preços** e faz handoff para WhatsApp/orçamento.
 - **Sem chave Groq**: responde 503 amigável (o front cai no fallback demo).
 - **Secrets**: `GROQ_API_KEY` e `SERVICE_ROLE_KEY` só no Worker (`wrangler secret put`);
-  `chat_docs` `match_chat_docs` liberadas p/ anon via grant público (sem RLS — leitura de
-  chunks não é sensível, embedding fica no servidor).
+  `chat_docs`/`orcamentos` com **RLS deny-all** (policy explícita `*_deny_anon_auth`) — único acesso é o Worker via `service_role`
+  (que bypasseia RLS); `match_chat_docs` revogada p/ anon/authenticated.
 
 ## Arquitetura
 
@@ -251,7 +258,7 @@ portfolio/
 ├── branding/           # fonte .ai da marca (só *.ai versionado)
 ├── scripts/            # generate-icons.mjs (npm run icons)
 ├── resume/             # pipeline de currículos (Python + mBART)
-├── supabase/           # LOCAIS (não versionados): schema.sql (tabelas + RLS), seed, migrações
+├── supabase/           # LOCAIS (não versionados): schema.sql (DDL) + rls.sql (RLS/grants) + seed.sql
 ├── worker/             # Cloudflare Worker (API, PDF, Brevo)
 └── e2e/                # Playwright E2E tests
 ```
