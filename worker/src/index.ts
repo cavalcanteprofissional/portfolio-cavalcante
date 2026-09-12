@@ -17,6 +17,7 @@ export interface Env {
   ALLOWED_ORIGINS?: string;
   ADMIN_EMAILS?: string;
   UMAMI_WEBSITE_ID?: string;
+  UMAMI_API_BASE?: string;
   UMAMI_API_KEY?: string;
   AI: Ai;
   GROQ_API_KEY?: string;
@@ -85,17 +86,16 @@ async function requireAdmin(
   assertAdminEmail(data.user.email, env);
 }
 
-const UMAMI_API_BASE = 'https://api.umami.is';
-
-// Busca uma metrica do Umami Cloud com a chave de API (server-side, nunca no bundle).
+// Busca uma metrica do Umami (self-host ou cloud) com a chave de API (server-side, nunca no bundle).
 async function umamiMetrics(
   env: Env,
   type: string,
   startAt: number,
   endAt: number,
 ): Promise<Array<{ x: string; y: number }>> {
-  if (!env.UMAMI_API_KEY || !env.UMAMI_WEBSITE_ID) return [];
-  const url = `${UMAMI_API_BASE}/api/websites/${env.UMAMI_WEBSITE_ID}/metrics?type=${encodeURIComponent(
+  const base = env.UMAMI_API_BASE?.replace(/\/+$/, '');
+  if (!env.UMAMI_API_KEY || !env.UMAMI_WEBSITE_ID || !base) return [];
+  const url = `${base}/api/websites/${env.UMAMI_WEBSITE_ID}/metrics?type=${encodeURIComponent(
     type,
   )}&startAt=${startAt}&endAt=${endAt}&limit=50`;
   const res = await fetch(url, {
@@ -106,16 +106,17 @@ async function umamiMetrics(
   return Array.isArray(data) ? data : [];
 }
 
-// GET /admin/analytics — proxy agrega visitas do Umami Cloud p/ o dashboard admin.
+// GET /admin/analytics — proxy agrega visitas do Umami p/ o dashboard admin.
 async function adminAnalytics(env: Env): Promise<Record<string, unknown>> {
   const endAt = Date.now();
   const startAt = endAt - 30 * 24 * 60 * 60 * 1000;
+  const base = env.UMAMI_API_BASE?.replace(/\/+$/, '');
 
-  if (!env.UMAMI_API_KEY || !env.UMAMI_WEBSITE_ID) {
+  if (!env.UMAMI_API_KEY || !env.UMAMI_WEBSITE_ID || !base) {
     throw new ApiError('Analytics nao configurado', 502);
   }
 
-  const statsUrl = `${UMAMI_API_BASE}/api/websites/${env.UMAMI_WEBSITE_ID}/stats?startAt=${startAt}&endAt=${endAt}`;
+  const statsUrl = `${base}/api/websites/${env.UMAMI_WEBSITE_ID}/stats?startAt=${startAt}&endAt=${endAt}`;
   const statsRes = await fetch(statsUrl, {
     headers: { Authorization: `Bearer ${env.UMAMI_API_KEY}` },
   });

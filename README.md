@@ -108,8 +108,8 @@ O site tem um backend gratuito para o fluxo de orçamento: **Supabase** (banco +
 ```bash
 VITE_SUPABASE_URL=          # pública (anon key)
 VITE_SUPABASE_ANON_KEY=     # pública (sb_publishable_...)
-VITE_UMAMI_WEBSITE_ID=      # pública — analytics
-VITE_UMAMI_SRC=             # pública — https://cloud.umami.is/script.js
+VITE_UMAMI_WEBSITE_ID=      # pública — website do seu instance Umami (self-host)
+VITE_UMAMI_SRC=             # pública — script do seu Cloud Run (ex.: https://…run.app/track.js)
 VITE_WORKER_URL=            # pública — URL do Cloudflare Worker
 ```
 
@@ -125,6 +125,23 @@ npx wrangler secret put SUPABASE_URL       # chave pública (pode ser variável 
 npx wrangler dev        # teste local
 npx wrangler deploy     # deploy
 ```
+
+### Umami (analytics self-host no GCP Cloud Run)
+
+O analytics sai do **Umami Cloud (API paga)** e vira **self-host gratuito (MIT)** — a image
+`ghcr.io/umami-software/umami:postgresql-latest` roda no **GCP Cloud Run** (deploy no próprio
+`deploy.yml`, pulado com notice se as secrets GCP não existirem) com o **Postgres do Supabase**
+(session pooler, porta 5432 — suporta a migração do boot). Sem API paga: a `UMAMI_API_KEY` é
+gerada **no painel do próprio instance** (`Settings → API Keys`) depois do primeiro deploy.
+
+- **Front**: `VITE_UMAMI_SRC` aponta pro seu Cloud Run (`https://<servico>-<hash>-<regiao>.run.app/track.js`)
+  e `VITE_UMAMI_WEBSITE_ID` é o website criado no instance. Ambos vão também nas **GitHub
+  Variables** (`vars.*`) porque entram no build do CI (não ficam hardcoded no workflow).
+- **Worker**: var `UMAMI_API_BASE` (`wrangler.toml`) + `UMAMI_WEBSITE_ID` + secret `UMAMI_API_KEY`;
+  o proxy `GET /admin/analytics` e o `Admin.tsx` (CSV incluso) continuam iguais.
+- **CI/GCP**: GitHub Secrets `GCP_SA_KEY` (service account JSON), `GCP_PROJECT`, `GCP_REGION`,
+  `DATABASE_URL` (session pooler) e `APP_SECRET` (aleatório, ex.: `openssl rand -hex 32`).
+- **Nota**: free tier do Cloud Run cobre o portfolio; a 1ª visita do dia pode sofrer cold start (~5–15s).
 
 > ⚠️ **Segurança:** credenciais secretas só entram via `wrangler secret put`, nunca no chat nem no bundle. O `service_role` antigo (postado em chat) foi tratado como comprometido e deve ser rotacionado.
 

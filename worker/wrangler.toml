@@ -18,13 +18,18 @@ FROM_EMAIL = "Cavalcante <cavalcanteprofissional@outlook.com>"
 OWNER_EMAIL = "cavalcanteprofissional@outlook.com"
 # Emails autorizados no painel admin (separa por virgula). RequireAdmin checa a sessao.
 ADMIN_EMAILS = "cavalcanteprofissional@outlook.com"
-# Website ID do Umami Cloud (público) — usado no proxy de analytics do admin.
+# Base do Umami (público) — self-host no GCP Cloud Run. PLACEHOLDER: troque
+# após o primeiro deploy de https://UMAMI-SERVICE-XXXXXXXXXXXXXXXX-uc.a.run.app
+# (o valor final fica em UMAMI_API_BASE do Cloud Run / VITE_UMAMI_SRC no front).
+UMAMI_API_BASE = "https://UMAMI-SERVICE-XXXXXXXXXXXXXXXX-uc.a.run.app"
+# Website ID do Umami (público) — criado no painel do seu instance; usado no proxy de analytics do admin.
 UMAMI_WEBSITE_ID = "076f01cd-40c0-45de-87c8-6888cb9efb78"
 
 # Secrets (definidos via `wrangler secret put`, nunca no repo):
 #   SERVICE_ROLE_KEY   -> nova service_role key (rotacionada pelo usuario)
 #   BREVO_API_KEY      -> Brevo (SMTP/Transactional) API key
-#   UMAMI_API_KEY      -> Umami Cloud API key (Bearer) para o proxy de analytics do admin
+#   UMAMI_API_KEY      -> Umami (self-host) API key (Bearer) gerada no painel do
+#                         seu instance (Settings -> API Keys); proxy /admin/analytics
 #   GROQ_API_KEY       -> Groq LLM do chatbot RAG (rota POST /chat) — wrangler secret put GROQ_API_KEY
 
 # Cron Trigger gratuito: ping anti-pausa do Supabase 1x/dia

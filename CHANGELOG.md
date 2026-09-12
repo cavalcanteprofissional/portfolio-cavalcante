@@ -1,5 +1,39 @@
 # Changelog
 
+## [1.26.0] - 2026-09-12
+
+### 📊 Analytics Umami self-host no GCP Cloud Run + Supabase (Onda 1.26)
+
+O analytics sai do **Umami Cloud** (onde a API é paga e você não está conseguindo gerar a
+`UMAMI_API_KEY`) e vira **self-host gratuito (MIT)**: a image oficial
+`ghcr.io/umami-software/umami:postgresql-latest` roda no **GCP Cloud Run** usando o **Postgres
+do Supabase** (session pooler, porta 5432 — suporta a migração que o Umami roda no boot). Com o
+instance próprio, a **API key é gerada de graça no painel dele** (`Settings → API Keys`) — sem
+paywall, sem depender de terceiro.
+
+- 🔄 **Worker** — `UMAMI_API_BASE` deixa de ser constante `https://api.umami.is` e vira **var** de
+  ambiente (`Env.UMAMI_API_BASE`); `umamiMetrics()` e `adminAnalytics()` (proxy `GET /admin/analytics`)
+  passam a usar a base do seu Cloud Run. Shape de resposta **inalterado** — `Admin.tsx` e Export CSV
+  continuam funcionando como estão
+- 🛰️ **Novo step "Deploy Umami Cloud Run" no `deploy.yml`** — `google-github-actions/auth` (service
+  account JSON `GCP_SA_KEY`) + `gcloud run deploy` da image oficial (porta 3000, memória 512Mi,
+  `min-instances 0`, `DISABLE_TELEMETRY=1`, `TRACKER_SCRIPT_NAME=track.js`, health `/api/heartbeat`);
+  uso apenas no `main` e **pulado com notice** se faltarem as secrets GCP (mesmo padrão do Cloudflare)
+- 📦 **GitHub Secrets novos** — `GCP_SA_KEY`, `GCP_PROJECT`, `GCP_REGION`, `DATABASE_URL`
+  (session pooler), `APP_SECRET` (aleatório)
+- 🏷️ **Build sem hardcode** — `VITE_UMAMI_SRC` e `VITE_UMAMI_WEBSITE_ID` saem do `.env.production`
+  do CI e passam a vir de **GitHub Variables** (`vars.*`), preenchidas após o 1º deploy
+- 📝 **`.env.example` / `README.md` / `wrangler.toml`** — documentam o novo fluxo (self-host,
+  `UMAMI_API_BASE`, secrets GCP, nota do cold start)
+- 🌐 **`i18n`** — textos do **CookieConsent** (pt/en/es) citam estatísticas anônimas **collecte por
+  nós** (sem cookies) e `analyticsEmpty` deixa de falar de "configure UMAMI_API_KEY"
+- 🔦 **Fallback registrado** — Plano **A2 (analytics próprio em Supabase + Worker)** documentado no
+  `TODO.md` para ativar caso o self-host no Cloud Run falhe no futuro (custo GCP/cold start)
+- 🧭 **Manual pós-deploy** — criar projeto GCP + service account; cadastrar as secrets GCP;
+  rodar o CI; login `admin/umami` no instance (trocar senha); criar website + **API key**; preencher
+  `.env.local`/Variables/Secrets (`VITE_UMAMI_SRC`, `VITE_UMAMI_WEBSITE_ID`, `UMAMI_API_KEY`);
+  redeploy e validar `curl /admin/analytics`
+
 ## [1.25.0] - 2026-09-12
 
 ### 🤖 Chat em produção de volta ao ar (Onda 1.25)

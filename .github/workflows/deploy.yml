@@ -99,8 +99,8 @@ jobs:
           cat > .env.production <<'EOF'
           VITE_SUPABASE_URL=https://ohtkfjckydmjsfuouyaj.supabase.co
           VITE_SUPABASE_ANON_KEY=sb_publishable_YrJ0_kAcZGUWOrvHtsKebw_lxjJkMnu
-          VITE_UMAMI_WEBSITE_ID=076f01cd-40c0-45de-87c8-6888cb9efb78
-          VITE_UMAMI_SRC=https://cloud.umami.is/script.js
+          VITE_UMAMI_WEBSITE_ID=${{ vars.VITE_UMAMI_WEBSITE_ID }}
+          VITE_UMAMI_SRC=${{ vars.VITE_UMAMI_SRC }}
           VITE_WORKER_URL=https://portfolio-cavalcante-worker.cavalcanteprofissional.workers.dev
           EOF
           npm run build
@@ -175,6 +175,48 @@ jobs:
           put SERVICE_ROLE_KEY "$SERVICE_ROLE_KEY"
           put BREVO_API_KEY "$BREVO_API_KEY"
           put UMAMI_API_KEY "$UMAMI_API_KEY"
+
+      - name: Authenticate to Google Cloud (Umami Cloud Run)
+        if: github.ref == 'refs/heads/main' && secrets.GCP_SA_KEY != ''
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Setup gcloud CLI (Umami Cloud Run)
+        if: github.ref == 'refs/heads/main' && secrets.GCP_SA_KEY != ''
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy Umami Cloud Run
+        # Umami é self-host gratuito (MIT) no GCP Cloud Run + Postgres do Supabase.
+        # A key de API dele NÃO é paga: é gerada no painel do próprio instance depois
+        # deste deploy (Settings -> API Keys) e vira o secret UMAMI_API_KEY do Worker.
+        if: github.ref == 'refs/heads/main' && secrets.GCP_SA_KEY != ''
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          APP_SECRET: ${{ secrets.APP_SECRET }}
+          GCP_PROJECT: ${{ secrets.GCP_PROJECT }}
+          GCP_REGION: ${{ secrets.GCP_REGION }}
+        run: |
+          if [ -z "$DATABASE_URL" ] || [ -z "$APP_SECRET" ] || [ -z "$GCP_PROJECT" ] || [ -z "$GCP_REGION" ]; then
+            echo "::notice::Secrets GCP (PROJECT/REGION) e/ou DATABASE_URL/APP_SECRET ausentes — deploy do Umami Cloud Run pulado"
+            exit 0
+          fi
+          # DATABASE_URL = Supabase session pooler (porta 5432) — suporta a migracao
+          # que o Umami roda no boot; se der erro de SSL, acrescente ?sslmode=require
+          gcloud run deploy umami \
+            --project "$GCP_PROJECT" \
+            --region "$GCP_REGION" \
+            --image ghcr.io/umami-software/umami:postgresql-latest \
+            --platform managed \
+            --allow-unauthenticated \
+            --port 3000 \
+            --memory 512Mi \
+            --cpu 1 \
+            --min-instances 0 \
+            --max-instances 2 \
+            --concurrency 80 \
+            --set-env-vars "DATABASE_TYPE=postgresql,DISABLE_TELEMETRY=1,TRACKER_SCRIPT_NAME=track.js,DATABASE_URL=${DATABASE_URL},APP_SECRET=${APP_SECRET}" \
+            --quiet
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

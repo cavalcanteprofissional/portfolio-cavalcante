@@ -1,3 +1,61 @@
+# 🚀 Onda 1.26 — Analytics Umami self-host: GCP Cloud Run + Postgres do Supabase (2026-09-12)
+
+> Decisões do usuário (2026-09-12): substituir o **Umami Cloud** (API **paga** — não foi possível
+> gerar `UMAMI_API_KEY`) por **self-host gratuito (MIT)** no **GCP Cloud Run**, com dados no
+> **Postgres do Supabase** (mesmo projeto). Nos grandes 3 (AWS/Azure/GCP) só o GCP tem free tier
+> viável p/ isso; exige cartão no billing. CI autentica via service account JSON; commits separados.
+> **Fallback documentado** (Plano A2) abaixo, caso o self-host falhe no futuro.
+
+## Fase A — Worker (proxy independente da base)
+- [x] A1 `Env.UMAMI_API_BASE` + `umamiMetrics`/`adminAnalytics` usam a **var** (removido o const `https://api.umami.is`);
+      shape do `/admin/analytics` **inalterado** (Admin.tsx + CSV intactos)
+- [x] A2 `wrangler.toml` — `UMAMI_API_BASE` (placeholder p/ o Cloud Run URL após o 1º deploy) +
+      comentário da `UMAMI_API_KEY` (gerada no painel do **próprio instance**, não no Umami Cloud)
+
+## Fase B — CI + Cloud Run
+- [x] B1 `deploy.yml` — build lê `VITE_UMAMI_SRC`/`VITE_UMAMI_WEBSITE_ID` de **GitHub Variables**
+      (`vars.*`, sem hardcode)
+- [x] B2 Step **Deploy Umami Cloud Run** — `google-github-actions/auth` (`GCP_SA_KEY` JSON) +
+      `gcloud run deploy` da image `ghcr.io/umami-software/umami:postgresql-latest`
+      (porta 3000, 512Mi, `min-instances 0`, `DISABLE_TELEMETRY=1`, `TRACKER_SCRIPT_NAME=track.js`);
+      só no `main` e **pulado com notice** se faltarem secrets
+- [x] B3 Secrets GCP documentadas: `GCP_SA_KEY`, `GCP_PROJECT`, `GCP_REGION`, `DATABASE_URL`
+      (session pooler :5432 — migração do boot; `?sslmode=require` se SSL), `APP_SECRET`
+
+## Fase C — i18n + docs
+- [x] C1 CookieConsent (pt/en/es) — estatísticas anônimas **coletadas por nós**, sem cookies
+- [x] C2 `analyticsEmpty` (pt/en/es) — "confira se o tracker está ativo e o UMAMI_API_KEY configurado"
+- [x] C3 `.env.example`, `README.md`, `CHANGELOG.md [1.26.0]`, `package.json` 1.26.0
+
+## 🧭 Manual pós-deploy (precisa de conta GCP com billing/cartão)
+- [ ] ⏳ Criar projeto GCP + service account (deploy) → secret `GCP_SA_KEY`; definir `GCP_PROJECT`/`GCP_REGION`
+- [ ] ⏳ `DATABASE_URL` (session pooler :5432) e `APP_SECRET` (`openssl rand -hex 32`) no GitHub Secrets
+- [ ] ⏳ Rodar o CI no `main` → conferir step "Deploy Umami Cloud Run" e pegar a **URL do serviço**
+      (formato `https://umami-<hash>-<regiao>.run.app`)
+- [ ] ⏳ Login no instance (`admin`/`umami`) → **trocar a senha** → criar o **website** do portfólio
+- [ ] ⏳ Gerar **API key** no instance (Settings → API Keys) → `UMAMI_API_KEY` em `.env.local` +
+      GitHub Secrets (o sync do CI entrega ao Worker)
+- [ ] ⏳ Preencher `VITE_UMAMI_SRC=https://<url>.run.app/track.js` e `VITE_UMAMI_WEBSITE_ID` (uuid do
+      website) em `.env.local` **e** nas GitHub Variables
+- [ ] ⏳ Atualizar `UMAMI_API_BASE` no `wrangler.toml` para a URL do instance; `npm run worker:env`
+- [ ] ⏳ Redeploy e validar: site registra visita pós-aceite; `curl /admin/analytics` retorna dados reais
+
+## 🔦 Fallback — Plano A2: Analytics próprio em Supabase + Worker (se o self-host falhar)
+
+> Registrado por decisão do usuário ("registre o plano 1 para caso o plano 2 falhar futuramente").
+> Gatilhos: conta GCP reclamada, custo imprevisto do Cloud Run, cold start perdendo 1ª visita, ou
+> manutenção indesejada do instance.
+
+- Receptor de eventos no **Worker** (`POST /track` com IP + UA + path, origin allowlist) gravando na
+  tabela `visits` do **Supabase** (RLS deny-all, acesso só via `service_role`)
+- `GET /admin/analytics` vira agregação **local** (visitors/pageviews last 30d + devices/pages/
+  countries/browsers) no **mesmo shape JSON** que o `Admin.tsx` e o Export CSV já consomem —
+  zero mudança no front
+- Front: remove `VITE_UMAMI_*` e o `enableUmami()`; um `track()` consent-gated envia ao Worker
+- Sem terceiros, sem API paga, sem servidor/cartão
+
+---
+
 # 🚀 Onda 1.25 — Chatbot em produção: fix GROQ_API_KEY + sync de secrets no CI (2026-09-12)
 
 > Causa raiz do "Chat temporariamente indisponível" no GitHub Pages: o Worker de produção
@@ -13,9 +71,8 @@
 
 ## Fase B — Auditoria de secrets
 - [x] B1 `wrangler secret list` → presentes: `BREVO_API_KEY`, `GROQ_API_KEY`, `SERVICE_ROLE_KEY`
-- [ ] ⏳ `UMAMI_API_KEY` **ausente** no Worker — pendência manual (painel admin de analytics;
-      chat não depende dela): cadastrar no GitHub + próximo deploy sincroniza, ou
-      `wrangler secret put UMAMI_API_KEY`
+- [ ] ⏳ `UMAMI_API_KEY` **ausente** no Worker — pendência resolvida na **Onda 1.26** (self-host
+      gera a key de graça no painel do próprio instance; chat não depende dela)
 
 ## Fase C — Automação (CI)
 - [x] C1 Passo "Sync Worker secrets" no `deploy.yml` — a cada deploy no `main` aplica as secrets
@@ -33,7 +90,7 @@
 ## 🧭 Manual pós-deploy
 - [ ] ⏳ Cadastrar no GitHub (Settings → Secrets and Variables → Actions):
       `GROQ_API_KEY` (do `.env.local`), `SERVICE_ROLE_KEY` e `BREVO_API_KEY` (raiz
-      `.env.local`), `UMAMI_API_KEY` (Umami Cloud → API)
+      `.env.local`), `UMAMI_API_KEY` (ver Onda 1.26 — key do instance próprio, não do Umami Cloud)
 - [ ] ⏳ Rodar o CI uma vez (push ou `workflow_dispatch`) e conferir o passo "Sync Worker secrets"
 - [ ] ⏳ Rotação de `SERVICE_ROLE_KEY` (ver nota no `.env.example`) — atualizar secret no Worker
       e no GitHub se rotacionar

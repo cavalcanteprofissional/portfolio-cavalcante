@@ -109,7 +109,7 @@ export const translations = {
     },
     consent: {
       header: "> POLÍTICA DE PRIVACIDADE",
-      body: "Valorizamos sua privacidade. Usamos apenas o que é essencial:\n• Estatísticas anônimas (só com sua permissão) para melhorar o site.\n• Preferências como idioma e som, salvas no seu navegador.\n• Nada é vendido, compartilhado ou usado para te rastrear.",
+      body: "Valorizamos sua privacidade. Usamos apenas o que é essencial:\n• Estatísticas anônimas de visitas (sem cookies, coletadas por nós, só com sua permissão) para melhorar o site.\n• Preferências como idioma e som, salvas no seu navegador.\n• Nada é vendido, compartilhado ou usado para te rastrear.",
       accept: "[ Aceitar ]",
     },
     boot: {
@@ -158,7 +158,7 @@ export const translations = {
       approve: "Aprovar",
       reject: "Recusar",
       analyticsTitle: "Visitas (30 dias)",
-      analyticsEmpty: "Sem dados de analytics (configure UMAMI_API_KEY no Worker).",
+      analyticsEmpty: "Sem dados ainda — confira se o tracker está ativo e o UMAMI_API_KEY configurado.",
       analyticsTotalVisitors: "Visitantes",
       analyticsTotalPageviews: "Visualizações",
       exportCsv: "Exportar CSV",
@@ -295,7 +295,7 @@ export const translations = {
     },
     consent: {
       header: "> PRIVACY POLICY",
-      body: "We value your privacy. We only use what is essential:\n• Anonymous statistics (only with your permission) to improve the site.\n• Preferences like language and sound, saved in your browser.\n• Nothing is sold, shared, or used to track you.",
+      body: "We value your privacy. We only use what is essential:\n• Anonymous visit statistics (cookie-less, collected by us, only with your permission) to improve the site.\n• Preferences like language and sound, saved in your browser.\n• Nothing is sold, shared, or used to track you.",
       accept: "[ Accept ]",
     },
     boot: {
@@ -344,7 +344,7 @@ export const translations = {
       approve: "Approve",
       reject: "Reject",
       analyticsTitle: "Visits (30 days)",
-      analyticsEmpty: "No analytics data (set UMAMI_API_KEY on the Worker).",
+      analyticsEmpty: "No data yet — check that the tracker is active and UMAMI_API_KEY is configured.",
       analyticsTotalVisitors: "Visitors",
       analyticsTotalPageviews: "Pageviews",
       exportCsv: "Export CSV",
@@ -481,7 +481,7 @@ export const translations = {
     },
     consent: {
       header: "> POLÍTICA DE PRIVACIDAD",
-      body: "Valoramos tu privacidad. Solo usamos lo esencial:\n• Estadísticas anónimas (solo con tu permiso) para mejorar el sitio.\n• Preferencias como idioma y sonido, guardadas en tu navegador.\n• Nada se vende, comparte ni se usa para rastrearte.",
+      body: "Valoramos tu privacidad. Solo usamos lo esencial:\n• Estadísticas anónimas de visitas (sin cookies, recolectadas por nosotros, solo con tu permiso) para mejorar el sitio.\n• Preferencias como idioma y sonido, guardadas en tu navegador.\n• Nada se vende, comparte ni se usa para rastrearte.",
       accept: "[ Aceptar ]",
     },
     boot: {
@@ -530,7 +530,7 @@ export const translations = {
       approve: "Aprobar",
       reject: "Rechazar",
       analyticsTitle: "Visitas (30 días)",
-      analyticsEmpty: "Sin datos de analytics (configura UMAMI_API_KEY en el Worker).",
+      analyticsEmpty: "Sin datos todavía — verifica que el tracker esté activo y que UMAMI_API_KEY esté configurado.",
       analyticsTotalVisitors: "Visitantes",
       analyticsTotalPageviews: "Vistas de página",
       exportCsv: "Exportar CSV",
