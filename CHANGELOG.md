@@ -1,5 +1,37 @@
 # Changelog
 
+## [1.25.0] - 2026-09-12
+
+### 🤖 Chat em produção de volta ao ar (Onda 1.25)
+
+- 🐛 **Causa raiz do "Chat temporariamente indisponível" no GitHub Pages** — o Worker de
+  produção estava deployado e saudável, mas a secret **`GROQ_API_KEY`** nunca foi registrada
+  (só existia em `worker/.dev.vars`, local). Por isso `POST /chat` retornava **503** com a
+  mensagem exata (guarda em `worker/src/index.ts:387` / `rag.ts:231`), que o front exibe como
+  bolha de erro. Local funcionava porque `wrangler dev --remote` usava o `.dev.vars`; o
+  `wrangler deploy` do CI sobe só o código, nunca secrets
+- 🔧 **Fix aplicado** — `wrangler secret put GROQ_API_KEY` (valor lido do `worker/.dev.vars`
+  via stdin, sem expor). Validado em produção: `POST /chat` responde com `{"answer": ...}` real
+  (RAG + handoff WhatsApp)
+- 🕵️ **Auditoria de secrets** — `wrangler secret list`: presentes `BREVO_API_KEY`,
+  `GROQ_API_KEY`, `SERVICE_ROLE_KEY`; **`UMAMI_API_KEY` ausente** (painel admin de analytics,
+  pendência manual — o chat não depende dela)
+- ⚙️ **Novo passo "Sync Worker secrets" no `deploy.yml`** — a cada deploy no `main`, o CI
+  aplica as secrets registradas no GitHub Secrets (`GROQ_API_KEY`, `SERVICE_ROLE_KEY`,
+  `BREVO_API_KEY`, `UMAMI_API_KEY`) no Worker de produção via `printf | wrangler secret put`
+  (sem vazar valor no log); secrets não cadastradas são puladas preservando o valor atual —
+  o Worker nunca mais fica sem chave por esquecimento
+- 📝 **`.env.example`** — `UMAMI_API_KEY` documentada (antes só constava no comentário do
+  `wrangler.toml`)
+- 🗂️ **Secrets local centralizadas no `.env.local` raiz** — `GROQ_API_KEY` sai do
+  `worker/.dev.vars` (manual) e passa a ser a fonte única; novo `scripts/sync-worker-env.mjs`
+  (`npm run worker:env`) regenera o `worker/.dev.vars` a partir do `.env.local`; novos scripts
+  `worker:env` e `worker:dev` no `package.json`; README atualizado
+- 🧭 **Manual pós-deploy** — cadastrar no GitHub (Settings → Secrets and Variables → Actions):
+  `GROQ_API_KEY` (de `.env.local`), `SERVICE_ROLE_KEY`, `BREVO_API_KEY` (raiz
+  `.env.local`) e `UMAMI_API_KEY` (Umami Cloud → API); atenção à rotação de `SERVICE_ROLE_KEY`
+  indicada no `.env.example`
+
 ## [1.24.0] - 2026-09-11
 
 ### 🤖 Chatbot RAG: corpus expandido + guardrails + UX (Onda 1.24)

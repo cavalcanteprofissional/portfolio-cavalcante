@@ -1,3 +1,45 @@
+# 🚀 Onda 1.25 — Chatbot em produção: fix GROQ_API_KEY + sync de secrets no CI (2026-09-12)
+
+> Causa raiz do "Chat temporariamente indisponível" no GitHub Pages: o Worker de produção
+> respondia **503** porque a secret `GROQ_API_KEY` nunca foi registrada (só existia em
+> `worker/.dev.vars`, local). Local funcionava via `wrangler dev --remote`; o `wrangler deploy`
+> do CI sobe só código. Fix manual + automação para não repetir.
+
+## Fase A — Diagnóstico e fix imediato
+- [x] A1 Diagnóstico: `POST /chat` → `{"error":"Chat temporariamente indisponível"}` (503);
+      string só existe em `worker/src/index.ts:387` e `rag.ts:231`, ambos guardas de `env.GROQ_API_KEY`
+- [x] A2 `GROQ_API_KEY` registrada em produção (`wrangler secret put`, valor lido do `.dev.vars` via stdin)
+- [x] A3 Validado no ar: `POST /chat` responde `{"answer": ...}` real (RAG + handoff WhatsApp)
+
+## Fase B — Auditoria de secrets
+- [x] B1 `wrangler secret list` → presentes: `BREVO_API_KEY`, `GROQ_API_KEY`, `SERVICE_ROLE_KEY`
+- [ ] ⏳ `UMAMI_API_KEY` **ausente** no Worker — pendência manual (painel admin de analytics;
+      chat não depende dela): cadastrar no GitHub + próximo deploy sincroniza, ou
+      `wrangler secret put UMAMI_API_KEY`
+
+## Fase C — Automação (CI)
+- [x] C1 Passo "Sync Worker secrets" no `deploy.yml` — a cada deploy no `main` aplica as secrets
+      do GitHub Secrets no Worker (`printf | wrangler secret put`; ausentes são puladas, valor atual preservado)
+- [x] C2 `.env.example` ganha `UMAMI_API_KEY` documentada
+- [x] C3 `CHANGELOG.md` → `[1.25.0]` · `package.json` → 1.25.0 · TODO.md aberto
+
+## Fase D — Secrets local centralizadas (fonte única no `.env.local`)
+- [x] D1 `GROQ_API_KEY` movida de `worker/.dev.vars` (manual) → `.env.local` raiz
+- [x] D2 `scripts/sync-worker-env.mjs` — regenera `worker/.dev.vars` a partir do `.env.local`
+      (GROQ_API_KEY/SERVICE_ROLE_KEY/BREVO_API_KEY/UMAMI_API_KEY presentes; avisa se faltar GROQ)
+- [x] D3 `package.json` — scripts `worker:env` e `worker:dev` (`worker:env` + `wrangler dev --remote --port 8787`)
+- [x] D4 Docs: `.env.example` (instrução `worker:env`), `README.md`, CHANGELOG
+
+## 🧭 Manual pós-deploy
+- [ ] ⏳ Cadastrar no GitHub (Settings → Secrets and Variables → Actions):
+      `GROQ_API_KEY` (do `.env.local`), `SERVICE_ROLE_KEY` e `BREVO_API_KEY` (raiz
+      `.env.local`), `UMAMI_API_KEY` (Umami Cloud → API)
+- [ ] ⏳ Rodar o CI uma vez (push ou `workflow_dispatch`) e conferir o passo "Sync Worker secrets"
+- [ ] ⏳ Rotação de `SERVICE_ROLE_KEY` (ver nota no `.env.example`) — atualizar secret no Worker
+      e no GitHub se rotacionar
+
+---
+
 # 🚀 Onda 1.24 — Chatbot RAG: corpus expandido + guardrails + UX (2026-09-11)
 
 > Continuação da Onda 1.23. Decisões do usuário (2026-09-11): expandir corpus com **tudo disponível** (CV PDF `cv_br_lucas_cavalcante.pdf` + CONTENT.md + FAQ + projetos + serviços + experiências, multi-idioma PT/EN/ES) · guardrails **completos** · UX com **typing animation + auto-scroll** na resposta do bot · manter `.env.local` em localhost (CI injeta URL de produção). Commitar sem push até validação local.

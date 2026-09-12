@@ -1,15 +1,17 @@
 {
   "name": "cavalcanteprofessional-portfolio",
   "private": true,
-  "version": "1.24.0",
+  "version": "1.25.0",
   "type": "module",
   "engines": {
     "node": ">=20.19"
   },
   "scripts": {
     "dev": "vite",
-    "ingest": "node scripts/ingest.mjs",
-    "build": "tsc -b && vite build",
+"ingest": "node scripts/ingest.mjs",
+  "worker:env": "node scripts/sync-worker-env.mjs",
+  "worker:dev": "npm run worker:env && cd worker && npx wrangler dev --remote --port 8787",
+  "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "icons": "node scripts/generate-icons.mjs",

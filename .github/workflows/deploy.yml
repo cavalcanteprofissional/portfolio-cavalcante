@@ -147,6 +147,35 @@ jobs:
           npm ci
           npx wrangler deploy
 
+      - name: Sync Worker secrets
+        working-directory: worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          SERVICE_ROLE_KEY: ${{ secrets.SERVICE_ROLE_KEY }}
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          UMAMI_API_KEY: ${{ secrets.UMAMI_API_KEY }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::notice::Secrets Cloudflare ausentes — sync de secrets pulado"
+            exit 0
+          fi
+          put() {
+            local name="$1" value="$2"
+            if [ -n "${value}" ]; then
+              printf '%s' "${value}" | npx wrangler secret put "${name}"
+            else
+              echo "::notice::Secret '$name' ausente no GitHub — valor atual preservado"
+            fi
+          }
+          # O DEPLOY sobe o CODIGO; o wrangler deploy NUNCA carrega secrets.
+          # Este passo garante que o Worker de producao tenha as chaves.
+          put GROQ_API_KEY "$GROQ_API_KEY"
+          put SERVICE_ROLE_KEY "$SERVICE_ROLE_KEY"
+          put BREVO_API_KEY "$BREVO_API_KEY"
+          put UMAMI_API_KEY "$UMAMI_API_KEY"
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

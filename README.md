@@ -233,6 +233,9 @@ Requer `SERVICE_ROLE_KEY`, `CLOUDFLARE_ACCOUNT_ID` e `CLOUDFLARE_API_TOKEN` no `
   públicos; **não inventa preços** e faz handoff para WhatsApp/orçamento.
 - **Sem chave Groq**: responde 503 amigável (o front cai no fallback demo).
 - **Secrets**: `GROQ_API_KEY` e `SERVICE_ROLE_KEY` só no Worker (`wrangler secret put`);
+  localmente ficam centralizadas no `.env.local` da raiz — `npm run worker:env` regenera o
+  `worker/.dev.vars` a partir dele (rode antes do `wrangler dev` ou use `npm run worker:dev`);
+  produção vem dos GitHub Secrets via CI (passo "Sync Worker secrets" do `deploy.yml`);
   `chat_docs`/`orcamentos` com **RLS deny-all** (policy explícita `*_deny_anon_auth`) — único acesso é o Worker via `service_role`
   (que bypasseia RLS); `match_chat_docs` revogada p/ anon/authenticated.
 
