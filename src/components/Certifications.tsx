@@ -12,6 +12,7 @@ import {
   Wrench,
   FileText,
   ExternalLink,
+  Brain,
 } from 'lucide-react';
 
 const certifications = [
@@ -19,41 +20,54 @@ const certifications = [
     id: '10',
     titleKey: 'cert.10.title',
     yearKey: 'cert.10.year',
-    icon: 'file-text',
-    url: '/portfolio-cavalcante/documents/certifications/banco_dados.pdf',
+    institutionKey: 'cert.10.institution',
+    hoursKey: 'cert.10.hours',
+    icon: 'brain',
+    url: '/portfolio-cavalcante/documents/certifications/inteligencia_artificial_ufc.pdf',
   },
   {
     id: '9',
     titleKey: 'cert.9.title',
     yearKey: 'cert.9.year',
-    icon: 'wrench',
-    url: '/portfolio-cavalcante/documents/certifications/engenharia_software.pdf',
+    institutionKey: 'cert.9.institution',
+    hoursKey: 'cert.9.hours',
+    icon: 'file-text',
+    url: '/portfolio-cavalcante/documents/certifications/banco_dados.pdf',
   },
   {
     id: '8',
     titleKey: 'cert.8.title',
     yearKey: 'cert.8.year',
-    icon: 'book-open',
-    url: '/portfolio-cavalcante/documents/certifications/ads_unifor.pdf',
+    institutionKey: 'cert.8.institution',
+    hoursKey: 'cert.8.hours',
+    icon: 'wrench',
+    url: '/portfolio-cavalcante/documents/certifications/engenharia_software.pdf',
   },
   {
     id: '7',
     titleKey: 'cert.7.title',
     yearKey: 'cert.7.year',
-    icon: 'database',
-    url: '/portfolio-cavalcante/documents/certifications/ciencia_dados_uece.pdf',
+    institutionKey: 'cert.7.institution',
+    hoursKey: 'cert.7.hours',
+    icon: 'book-open',
+    url: '/portfolio-cavalcante/documents/certifications/ads_unifor.pdf',
   },
   {
     id: '6',
     titleKey: 'cert.6.title',
     yearKey: 'cert.6.year',
-    icon: 'terminal',
-    url: '/portfolio-cavalcante/documents/certifications/devops_ada.pdf',
+    institutionKey: 'cert.6.institution',
+    hoursKey: 'cert.6.hours',
+    icon: 'database',
+    url: '/portfolio-cavalcante/documents/certifications/ciencia_dados_uece.pdf',
   },
+
   {
     id: '5',
     titleKey: 'cert.5.title',
     yearKey: 'cert.5.year',
+    institutionKey: 'cert.5.institution',
+    hoursKey: 'cert.5.hours',
     icon: 'code',
     url: '/portfolio-cavalcante/documents/certifications/fullstack_iel.pdf',
   },
@@ -61,6 +75,8 @@ const certifications = [
     id: '4',
     titleKey: 'cert.4.title',
     yearKey: 'cert.4.year',
+    institutionKey: 'cert.4.institution',
+    hoursKey: 'cert.4.hours',
     icon: 'graduation-cap',
     url: '/portfolio-cavalcante/documents/certifications/ciencias_sociais_ufc.pdf',
   },
@@ -68,6 +84,8 @@ const certifications = [
     id: '3',
     titleKey: 'cert.3.title',
     yearKey: 'cert.3.year',
+    institutionKey: 'cert.3.institution',
+    hoursKey: 'cert.3.hours',
     icon: 'gamepad',
     url: '/portfolio-cavalcante/documents/certifications/pjd_estacio.pdf',
   },
@@ -75,6 +93,8 @@ const certifications = [
     id: '2',
     titleKey: 'cert.2.title',
     yearKey: 'cert.2.year',
+    institutionKey: 'cert.2.institution',
+    hoursKey: 'cert.2.hours',
     icon: 'palette',
     url: '/portfolio-cavalcante/documents/certifications/design_grafico.pdf',
   },
@@ -82,6 +102,8 @@ const certifications = [
     id: '1',
     titleKey: 'cert.1.title',
     yearKey: 'cert.1.year',
+    institutionKey: 'cert.1.institution',
+    hoursKey: 'cert.1.hours',
     icon: 'laptop-code',
     url: '/portfolio-cavalcante/documents/certifications/montagem_manutencao.pdf',
   },
@@ -98,6 +120,7 @@ const iconComponents: Record<string, React.ComponentType<{ className?: string }>
   'book-open': BookOpen,
   wrench: Wrench,
   'file-text': FileText,
+  brain: Brain,
 };
 
 export function Certifications() {
@@ -128,9 +151,19 @@ export function Certifications() {
                     </span>
                   </div>
                   
-                  <h3 className="font-semibold text-sm mb-3 group-hover:text-primary transition-colors line-clamp-2">
+                  <h3 className="font-semibold text-sm mb-1 group-hover:text-primary transition-colors line-clamp-2">
                     {t(cert.titleKey)}
                   </h3>
+                  {cert.institutionKey && (
+                    <p className="text-xs text-muted-foreground mb-1 line-clamp-2">
+                      {t(cert.institutionKey)}
+                    </p>
+                  )}
+                  {cert.hoursKey && (
+                    <p className="text-xs text-muted-foreground/80 mb-3 line-clamp-1">
+                      {t(cert.hoursKey)}
+                    </p>
+                  )}
                   
                   <div className="mt-auto pt-2">
                     {cert.url ? (

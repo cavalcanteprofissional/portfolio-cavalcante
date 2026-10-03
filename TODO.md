@@ -1,4 +1,91 @@
+# 🚀 Onda 1.27 — Analytics Umami self-host: Oracle Cloud Always Free (2026-09-12)
+
+> **Pivot do Plano 2 (registrado):** GCP Cloud Run foi **abandonado** porque a criação de conta
+> com billing no Brasil exige **pré-pagamento único de R$150,00** (reembolsável só fechando a
+> conta). Decisão do usuário (2026-09-12): "registre o plano 2 com oracle cloud always free
+> tier e siga para ele mas mantenha o fallback A2 caso não der certo".
+>
+> **Stack travada (decisões do usuário):** home region **sa-saopaulo-1** · banco **Supabase
+> Postgres** (mesmo `DATABASE_URL` session pooler já no `.env.local`) · HTTPS **Caddy + sslip.io**
+> (`https://umami.<IP>.sslip.io`, Let's Encrypt automático, sem domínio) · SSH automatizado por mim ·
+> **remover** os steps GCP do `deploy.yml` (substituir por health-check) · repo vira **1.27.0** ·
+> **Fallback A2 mantido** (seção abaixo).
+>
+> **Oracle Always Free (docs 2026):** conta sem cobrança — cartão só p/ **verificação**
+> (hold temporário ~US$1, sem R$150; não aceita pré-pago/virtual/PIN) · Always Free = 1× **A1.Flex
+> (1–2 OCPU/6–12GB)** + 200GB block volume + ~10TB egress/mês · home region **imutável** ·
+> armadilhas: **"out of capacity"** ao criar A1 (contornar: outra AD ou shape menor) e
+> **reclaim de instância ociosa** (7 dias com p95 de CPU/network/memória <20% → Oracle para a VM,
+> avisa ~7 dias antes) · conta idle 30+ dias pode ser suspensa.
+
+> ⏸️ **BLOQUEADA (2026-09-14):** cartão de crédito **sem saldo** — criação de conta Oracle exige
+> hold de verificação (~US$1). Projeto pausado até o cartão ter saldo. Usuário retorna com o plano
+> ao fundar o cartão. Onda 1.27 continua da Fase 0 quando desbloqueada.
+
+## Fase 0 — Manual (você; ~15 min — não posso executar)
+- [ ] ⏳ Criar conta **oracle.com/cloud/free** (cartão tipo crédito; hold ~US$1; sem R$150) com
+       home region **sa-saopaulo-1** (imutável)
+- [ ] ⏳ Console → "Create a VM instance": shape **VM.Standard.A1.Flex, 2 OCPU/12GB** (se "out of
+       capacity": tentar AD diferente ou fallback **1 OCPU/6GB**), imagem **Ubuntu 24.04**,
+       boot **50GB**, **reserved public IP**, security list/inbound **80/443** de 0.0.0.0/0
+- [ ] ⏳ Colar a chave pública SSH (gerada na Fase 1) no campo SSH keys e me enviar o **IP público**
+       · preparar keypair antecipado: `ssh-keygen -t ed25519 -f %LOCALAPPDATA%\Temp\opencode\oracle-ssh -N ""`
+
+## Fase 1 — Eu (via SSH + API, depois da Fase 0)
+- [ ] G1 Gerar keypair SSH (privada fica em `%LOCALAPPDATA%\Temp\opencode`, **nunca** no repo);
+       entregar a pública para a Fase 0.3
+- [ ] G2 SSH na VM: instalar Docker + compose; `docker-compose.yml` (umami + caddy) + `Caddyfile`
+       (`umami.<IP>.sslip.io → umami:3000`, auto-TLS Let's Encrypt)
+- [ ] G3 Env do Umami: `DATABASE_TYPE=postgresql`, `DATABASE_URL` (session pooler :5432 — valor
+       lido do `.env.local`), `APP_SECRET` (`openssl rand -hex 32`), `DISABLE_TELEMETRY=1`,
+       `TRACKER_SCRIPT_NAME=track.js`; health check `/api/heartbeat`
+- [ ] G4 Setup via API: login `admin`/`umami` → trocar senha + email
+       `cavalcanteprofissional@outlook.com` → criar website "Portfolio Cavalcante" (uuid) → gerar
+       **API key** (Settings → API Keys)
+- [ ] G5 Validar de fora: `curl https://umami.<IP>.sslip.io/api/heartbeat` → 200
+
+## Fase 2 — Repo (Onda 1.27.0, depois da Fase 1)
+- [ ] D1 `deploy.yml` — **remover** os 3 steps GCP (Authenticate to Google Cloud / Setup gcloud /
+       Deploy Umami Cloud Run) e adicionar health-check do Umami:
+       `curl -fsS ${{ vars.UMAMI_API_BASE }}/api/heartbeat` (non-blocking, notice se sem var);
+       build mantém `vars.VITE_UMAMI_SRC`/`VITE_UMAMI_WEBSITE_ID`
+- [ ] D2 `worker/wrangler.toml` — `UMAMI_API_BASE = https://umami.<IP>.sslip.io` (remove o
+       placeholder `.run.app`), `UMAMI_WEBSITE_ID = <uuid>`
+- [ ] D3 `.env.local` — `VITE_UMAMI_SRC = https://umami.<IP>.sslip.io/track.js`,
+       `VITE_UMAMI_WEBSITE_ID = <uuid>`, `UMAMI_API_KEY = <key>` → `npm run worker:env` →
+       deploy do Worker
+- [ ] D4 GitHub — vars: `VITE_UMAMI_SRC`, `VITE_UMAMI_WEBSITE_ID`, `UMAMI_API_BASE`; secret:
+       `UMAMI_API_KEY`; remover secrets GCP (`GCP_SA_KEY`/`GCP_PROJECT`/`GCP_REGION`) se existirem
+- [ ] D5 Docs: `.env.example`/`README.md` (substituir seção GCP Cloud Run por **Oracle — Always
+       Free** com stack+decisões), `CHANGELOG.md [1.27.0]`, `package.json`/lock → 1.27.0,
+       este TODO.md
+- [ ] D6 Validação: `npm run lint` + typecheck (root/worker) + build + YAML parse do deploy.yml;
+       `curl /admin/analytics` retorna dados reais após visita pós-aceite do consentimento
+
+## Fase 3 — Anti-reclaim + regime
+- [ ] R1 Job diário na VM (health + carga leve real — ex.: curl no heartbeat + logrotate) e cron
+       no Worker pingando `UMAMI_API_BASE/api/heartbeat`
+- [ ] R2 Contingência: se a VM for reclaimada/com server derrubado, re-deploy é só
+       `docker compose up -d` (dados no Supabase seguem intactos — decisão do banco externo)
+
+## 🔦 Fallback — Plano A2 (registrado, se o self-host falhar)
+
+> Gatilhos: A1 não sobe (out of capacity), VM reclaimada, custo imprevisto, cold start perdendo
+> visitas, ou manutenção indesejada. Sem terceiros, sem API paga, sem servidor/cartão.
+
+- Receptor de eventos no **Worker** (`POST /track` com IP + UA + path, origin allowlist) gravando
+  na tabela `visits` do **Supabase** (RLS deny-all, acesso só via `service_role`)
+- `GET /admin/analytics` vira agregação **local** (visitors/pageviews 30d + devices/pages/
+  countries/browsers) no **mesmo shape JSON** que `Admin.tsx` + Export CSV consomem
+- Front: remove `VITE_UMAMI_*` e `enableUmami()`; `track()` consent-gated envia ao Worker
+
+---
+
 # 🚀 Onda 1.26 — Analytics Umami self-host: GCP Cloud Run + Postgres do Supabase (2026-09-12)
+
+> ⚠️ **Arquivo p/ contexto — SUPERSEDED pela Onda 1.27 (Oracle).** O caminho GCP abaixo foi
+> abandonado (R$150 pré-pagamento no billing BR). Código das Fases A/B/C (var
+> `UMAMI_API_BASE`, i18n, deploy.yml) continua válido e reutilizado na 1.27.
 
 > Decisões do usuário (2026-09-12): substituir o **Umami Cloud** (API **paga** — não foi possível
 > gerar `UMAMI_API_KEY`) por **self-host gratuito (MIT)** no **GCP Cloud Run**, com dados no

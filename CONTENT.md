@@ -205,20 +205,20 @@ Este documento contém todo o conteúdo textual do projeto, espelhando as chaves
 
 ---
 
-## 10. Certifications (10 Certificados)
+## 10. Certifications (11 Certificados)
 
-| # | Chave | Título PT | Título EN | Título ES | Ano | Certificado |
-|---|------|----------|----------|-----------|-----|-------------|
-| 1 | `cert.10.title` | Administração de Banco de Dados | Database Administration | Administración de Bases de Datos | 2026 | /portfolio-cavalcante/documents/certifications/banco_dados.pdf |
-| 2 | `cert.9.title` | Engenharia de Software | Software Engineering | Ingeniería de Software | 2025 | /portfolio-cavalcante/documents/certifications/engenharia_software.pdf |
-| 3 | `cert.8.title` | Análise e Desenvolvimento de Sistemas | Systems Analysis and Development | Análisis y Desarrollo de Sistemas | 2025 | /portfolio-cavalcante/documents/certifications/ads_unifor.pdf |
-| 4 | `cert.7.title` | Ciência de Dados | Data Science | Ciencia de Datos | 2024 | /portfolio-cavalcante/documents/certifications/ciencia_dados_uece.pdf |
-| 5 | `cert.6.title` | DevOps | DevOps | DevOps | 2024 | /portfolio-cavalcante/documents/certifications/devops_ada.pdf |
-| 6 | `cert.5.title` | Desenvolvedor FullStack | FullStack Developer | Desarrollador FullStack | 2024 | /portfolio-cavalcante/documents/certifications/fullstack_iel.pdf |
-| 7 | `cert.4.title` | Ciências Sociais | Social Sciences | Ciencias Sociales | 2019 | /portfolio-cavalcante/documents/certifications/ciencias_sociais_ufc.pdf |
-| 8 | `cert.3.title` | Programação de Jogos Digitais | Digital Game Programming | Programación de Juegos Digitales | 2016 | - |
-| 9 | `cert.2.title` | Design Gráfico & Web Design | Graphic Design & Web Design | Diseño Gráfico & Web Design | 2013 | /portfolio-cavalcante/documents/certifications/design_grafico.pdf |
-| 10 | `cert.1.title` | Montagem e Manutenção de Computadores | Computer Assembly and Maintenance | Ensamblaje y Mantenimiento de Computadoras | 2011 | /portfolio-cavalcante/documents/certifications/montagem_manutencao.pdf |
+| # | Chave | Título PT | Título EN | Título ES | Instituição PT | Instituição EN | Instituição ES | Ano | Carga Horária | Certificado |
+|---|------|----------|----------|-----------|---------------|---------------|---------------|-----|--------------|-------------|
+| 1 | `cert.10.title` | Inteligência Artificial | Artificial Intelligence | Inteligencia Artificial | UFC - Universidade Federal do Ceará | UFC - Federal University of Ceará | UFC - Universidad Federal de Ceará | 2026 | 360 h | /portfolio-cavalcante/documents/certifications/inteligencia_artificial_ufc.pdf |
+| 2 | `cert.9.title` | Administração de Banco de Dados | Database Administration | Administración de Bases de Datos | FAMEESP - Faculdade Metropolitana do Estado de São Paulo | FAMEESP - Metropolitan College of São Paulo State | FAMEESP - Facultad Metropolitana del Estado de São Paulo | 2026 | 600 h | /portfolio-cavalcante/documents/certifications/banco_dados.pdf |
+| 3 | `cert.8.title` | Engenharia de Software | Software Engineering | Ingeniería de Software | FAMEESP - Faculdade Metropolitana do Estado de São Paulo | FAMEESP - Metropolitan College of São Paulo State | FAMEESP - Facultad Metropolitana del Estado de São Paulo | 2025 | 600 h | /portfolio-cavalcante/documents/certifications/engenharia_software.pdf |
+| 4 | `cert.7.title` | Análise e Desenvolvimento de Sistemas | Systems Analysis and Development | Análisis y Desarrollo de Sistemas | UNIFOR - Universidade de Fortaleza | UNIFOR - University of Fortaleza | UNIFOR - Universidad de Fortaleza | 2025 | 2.412 h | /portfolio-cavalcante/documents/certifications/ads_unifor.pdf |
+| 5 | `cert.6.title` | Ciência de Dados | Data Science | Ciencia de Datos | UECE - Universidade Estadual do Ceará | UECE - Ceará State University | UECE - Universidad Estadual de Ceará | 2024 | 480 h | /portfolio-cavalcante/documents/certifications/ciencia_dados_uece.pdf |
+| 6 | `cert.5.title` | Desenvolvedor FullStack | FullStack Developer | Desarrollador FullStack | IEL - Instituto Euvaldo Lodi | IEL - Euvaldo Lodi Institute | IEL - Instituto Euvaldo Lodi | 2024 | 192 h | /portfolio-cavalcante/documents/certifications/fullstack_iel.pdf |
+| 7 | `cert.4.title` | Ciências Sociais | Social Sciences | Ciencias Sociales | UFC - Universidade Federal do Ceará | UFC - Federal University of Ceará | UFC - Universidad Federal de Ceará | 2019 | 1.888 h | /portfolio-cavalcante/documents/certifications/ciencias_sociais_ufc.pdf |
+| 8 | `cert.3.title` | Programação de Jogos Digitais | Digital Game Programming | Programación de Juegos Digitales | ESTÁCIO - Centro Universitário Estácio do Ceará | ESTÁCIO - Estácio do Ceará University Center | ESTÁCIO - Centro Universitario Estácio do Ceará | 2016 | 1.440 h | - |
+| 9 | `cert.2.title` | Design Gráfico & Web Design | Graphic Design & Web Design | Diseño Gráfico & Web Design | GRACOM | GRACOM | GRACOM | 2013 | 920 h | /portfolio-cavalcante/documents/certifications/design_grafico.pdf |
+| 10 | `cert.1.title` | Montagem e Manutenção de Computadores | Computer Assembly and Maintenance | Ensamblaje y Mantenimiento de Computadoras | S.O.S. Computadores | S.O.S. Computers | S.O.S. Computadores | 2011 | 920 h | /portfolio-cavalcante/documents/certifications/montagem_manutencao.pdf |
 
 ### Subtítulo de Certificações
 
@@ -273,7 +273,7 @@ Este documento contém todo o conteúdo textual do projeto, espelhando as chaves
 | `stats.years` | Anos de Experiência | Years of Experience | Años de Experiencia | 6+ |
 | `stats.projects` | Projetos Realizados | Projects Completed | Proyectos Realizados | 16+ |
 | `stats.clients` | Clientes Atendidos | Clients Served | Clientes Atendidos | 4+ |
-| `stats.certifications` | Certificações | Certifications | Certificaciones | 10+ |
+| `stats.certifications` | Certificações | Certifications | Certificaciones | 11+ |
 
 ---
 
