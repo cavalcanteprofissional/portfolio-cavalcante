@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.26.1] - 2026-10-04
+
+### 🛠️ Deploy do Pages destravado (workflow inválido desde 03/10)
+
+- 🚨 **Workflow inválido** — `deploy.yml` usava o contexto `secrets` em `if:` de step
+  (`secrets.GCP_SA_KEY != ''`), que o GitHub **não permite**: o arquivo era rejeitado na hora
+  (`Invalid workflow file`) e o run falhava em 0s **sem executar nenhum job**. O site ficou
+  ~3 semanas sem deploy (último run ok em 11/09) — a cert de IA UFC e a remoção do PDF do DevOps
+  Ada não chegaram a ser publicadas
+- 🔗 **Guard por `outcome`** — `auth@v2` (id `gcp-auth`) + `setup-gcloud` (id `gcloud-setup`) com
+  `continue-on-error: true`; cada step seguinte só roda com
+  `steps.<id>.outcome == 'success'`. Sem `GCP_SA_KEY` a auth falha, o Cloud Run é pulado e o
+  build do Pages segue normally
+- 🧯 **GCP não derruba mais o Pages** — o `gcloud run deploy` do Umami também tem
+  `continue-on-error: true`: falha de GCP vira warning, não impede publicar o site
+- 🏷️ **`vars.*` → `secrets.*` no build** — `VITE_UMAMI_WEBSITE_ID` e `VITE_UMAMI_SRC` apontavam
+  para *GitHub Variables*, que **não existem neste repo** (total: 0); o build publicaria analytics
+  vazio. Passam a ler das *GitHub Secrets* `VITE_UMAMI_WEBSITE_ID`/`VITE_UMAMI_SRC` (valores públicos,
+  presentes no repo desde 30/08). Analytics segue no Umami Cloud até o 1º deploy do self-host
+- 📄 **1.26.0 corrigido** — a entrada acima falava em "GitHub Variables"; o preenchimento é feito em
+  **Secrets**
+
 ## [1.26.0] - 2026-09-12
 
 ### 📊 Analytics Umami self-host no GCP Cloud Run + Supabase (Onda 1.26)
@@ -22,7 +44,8 @@ paywall, sem depender de terceiro.
 - 📦 **GitHub Secrets novos** — `GCP_SA_KEY`, `GCP_PROJECT`, `GCP_REGION`, `DATABASE_URL`
   (session pooler), `APP_SECRET` (aleatório)
 - 🏷️ **Build sem hardcode** — `VITE_UMAMI_SRC` e `VITE_UMAMI_WEBSITE_ID` saem do `.env.production`
-  do CI e passam a vir de **GitHub Variables** (`vars.*`), preenchidas após o 1º deploy
+  do CI e passam a vir das **GitHub Secrets** `secrets.VITE_UMAMI_SRC`/`secrets.VITE_UMAMI_WEBSITE_ID`,
+  preenchidas após o 1º deploy
 - 📝 **`.env.example` / `README.md` / `wrangler.toml`** — documentam o novo fluxo (self-host,
   `UMAMI_API_BASE`, secrets GCP, nota do cold start)
 - 🌐 **`i18n`** — textos do **CookieConsent** (pt/en/es) citam estatísticas anônimas **collecte por

@@ -99,8 +99,8 @@ jobs:
           cat > .env.production <<'EOF'
           VITE_SUPABASE_URL=https://ohtkfjckydmjsfuouyaj.supabase.co
           VITE_SUPABASE_ANON_KEY=sb_publishable_YrJ0_kAcZGUWOrvHtsKebw_lxjJkMnu
-          VITE_UMAMI_WEBSITE_ID=${{ vars.VITE_UMAMI_WEBSITE_ID }}
-          VITE_UMAMI_SRC=${{ vars.VITE_UMAMI_SRC }}
+          VITE_UMAMI_WEBSITE_ID=${{ secrets.VITE_UMAMI_WEBSITE_ID }}
+          VITE_UMAMI_SRC=${{ secrets.VITE_UMAMI_SRC }}
           VITE_WORKER_URL=https://portfolio-cavalcante-worker.cavalcanteprofissional.workers.dev
           EOF
           npm run build
@@ -177,20 +177,29 @@ jobs:
           put UMAMI_API_KEY "$UMAMI_API_KEY"
 
       - name: Authenticate to Google Cloud (Umami Cloud Run)
-        if: github.ref == 'refs/heads/main' && secrets.GCP_SA_KEY != ''
+        # O contexto `secrets` NAO e valido em `if:` de step (o GitHub rejeita o
+        # workflow inteiro). O guard usa `steps.<id>.outcome`: sem credencial a
+        # auth falha, os steps abaixo sao pulados e o Pages continua publicando.
+        id: gcp-auth
+        if: github.ref == 'refs/heads/main'
+        continue-on-error: true
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Setup gcloud CLI (Umami Cloud Run)
-        if: github.ref == 'refs/heads/main' && secrets.GCP_SA_KEY != ''
+        id: gcloud-setup
+        if: github.ref == 'refs/heads/main' && steps.gcp-auth.outcome == 'success'
+        continue-on-error: true
         uses: google-github-actions/setup-gcloud@v2
 
       - name: Deploy Umami Cloud Run
         # Umami é self-host gratuito (MIT) no GCP Cloud Run + Postgres do Supabase.
         # A key de API dele NÃO é paga: é gerada no painel do próprio instance depois
         # deste deploy (Settings -> API Keys) e vira o secret UMAMI_API_KEY do Worker.
-        if: github.ref == 'refs/heads/main' && secrets.GCP_SA_KEY != ''
+        # continue-on-error: falha do GCP nao pode derrubar o deploy do Pages.
+        if: github.ref == 'refs/heads/main' && steps.gcp-auth.outcome == 'success' && steps.gcloud-setup.outcome == 'success'
+        continue-on-error: true
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           APP_SECRET: ${{ secrets.APP_SECRET }}
