@@ -26,7 +26,11 @@ export const translations = {
       "13": { title: "Pro Git QA Bot", description: "Chatbot com RAG para responder perguntas sobre Git usando LangChain e Streamlit." },
       "14": { title: "JobMatch AI", description: "Sistema de Machine Learning para matching inteligente entre currículos e vagas de emprego com FastAPI e frontend React." },
       "15": { title: "CD Price Tracker", description: "Scraper semanal de preços de CDs em Amazon, Mercado Livre e Shopee com dashboard Next.js e gráficos Recharts." },
-      "16": { title: "LinkTree Pessoal", description: "Agregador de links pessoais com dashboard de analytics, feed do Instagram, modo escuro e tema 3D interativo com Three.js." }
+      "16": { title: "LinkTree Pessoal", description: "Agregador de links pessoais com dashboard de analytics, feed do Instagram, modo escuro e tema 3D interativo com Three.js." },
+      "17": { title: "Karaokê Flow", description: "Aplicação mobile-first para karaokê ao vivo em bares e restaurantes: fila por QR code, player na TV e controle do host em tempo real com Next.js, Supabase e YouTube." },
+      "18": { title: "Karaokê Map", description: "Mapa curado de bares com karaokê em Fortaleza e Região Metropolitana com filtros de horários e dias, feito em React, TypeScript, MapLibre e Supabase." },
+      "19": { title: "Sopro", description: "Companheiro desktop para Windows que explica termos técnicos em inglês em tempo real durante aulas e calls, com transcrição local (Whisper) e operação offline-first em Python." },
+      "20": { title: "Sentiment Analysis", description: "Projeto de análise de sentimento com Transformers e práticas de MLOps: rastreamento de experimentos no MLflow, API de inferência com FastAPI e demo em Gradio." }
     },
     experience: {
       current: "Atual",
@@ -212,7 +216,11 @@ export const translations = {
       "13": { title: "Pro Git QA Bot", description: "RAG chatbot for answering Git questions using LangChain and Streamlit." },
       "14": { title: "JobMatch AI", description: "End-to-end ML system for intelligent resume-job matching with FastAPI and React frontend." },
       "15": { title: "CD Price Tracker", description: "Weekly CD price scraper across Amazon, Mercado Livre, and Shopee with Next.js dashboard and Recharts charts." },
-      "16": { title: "Personal LinkTree", description: "Personal link aggregator with analytics dashboard, Instagram feed, dark mode, and interactive 3D theme with Three.js." }
+      "16": { title: "Personal LinkTree", description: "Personal link aggregator with analytics dashboard, Instagram feed, dark mode, and interactive 3D theme with Three.js." },
+      "17": { title: "Karaoke Flow", description: "Mobile-first app for live karaoke in bars and restaurants: QR-code queue, TV player, and real-time host controls built with Next.js, Supabase, and YouTube." },
+      "18": { title: "Karaoke Map", description: "Curated map of karaoke bars in Fortaleza and its metro area with schedule filters, built with React, TypeScript, MapLibre, and Supabase." },
+      "19": { title: "Sopro", description: "Windows desktop companion that explains technical English terms in real time during classes and calls, with local transcription (Whisper) and offline-first operation in Python." },
+      "20": { title: "Sentiment Analysis", description: "Sentiment analysis project with Transformers and MLOps practices: MLflow experiment tracking, FastAPI inference API, and Gradio demo." }
     },
     experience: {
       current: "Current",
@@ -398,7 +406,11 @@ export const translations = {
       "13": { title: "Pro Git QA Bot", description: "Chatbot RAG para responder preguntas sobre Git usando LangChain y Streamlit." },
       "14": { title: "JobMatch AI", description: "Sistema de Machine Learning para matching inteligente entre currículos y ofertas de empleo con FastAPI y frontend React." },
       "15": { title: "CD Price Tracker", description: "Scraper semanal de precios de CD en Amazon, Mercado Libre y Shopee con panel Next.js y gráficos Recharts." },
-      "16": { title: "LinkTree Personal", description: "Agregador de enlaces personales con dashboard de analytics, feed de Instagram, modo oscuro y tema 3D interactivo con Three.js." }
+      "16": { title: "LinkTree Personal", description: "Agregador de enlaces personales con dashboard de analytics, feed de Instagram, modo oscuro y tema 3D interactivo con Three.js." },
+      "17": { title: "Karaoke Flow", description: "Aplicación mobile-first para karaoke en vivo en bares y restaurantes: cola por QR, reproductor en TV y control del host en tiempo real con Next.js, Supabase y YouTube." },
+      "18": { title: "Mapa de Karaoke", description: "Mapa curado de bares de karaoke en Fortaleza y su región metropolitana con filtros de horarios y días, hecho con React, TypeScript, MapLibre y Supabase." },
+      "19": { title: "Sopro", description: "Compañero de escritorio para Windows que explica términos técnicos en inglés en tiempo real durante clases y llamadas, con transcripción local (Whisper) y operación offline-first en Python." },
+      "20": { title: "Análisis de Sentimiento", description: "Proyecto de análisis de sentimiento con Transformers y prácticas de MLOps: seguimiento de experimentos en MLflow, API de inferencia con FastAPI y demo en Gradio." }
     },
     experience: {
       current: "Actual",

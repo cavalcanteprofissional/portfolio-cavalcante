@@ -19,6 +19,7 @@ import {
   ScanSearch,
   ShoppingCart,
   Link2,
+  BookOpen,
 } from 'lucide-react';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -37,6 +38,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   'scan-search': ScanSearch,
   'shopping-cart': ShoppingCart,
   'link-2': Link2,
+  'book-open': BookOpen,
 };
 
 interface ProjectCardProps {

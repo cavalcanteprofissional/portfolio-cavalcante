@@ -117,11 +117,13 @@ Este documento contém todo o conteúdo textual do projeto, espelhando as chaves
 
 ---
 
-## 7. Projects / Portfolio (16 Projetos)
+## 7. Projects / Portfolio (20 Projetos)
+
+> **Curadoria (top 5 no LinkTree):** `order` desc em `projects.json` — 105 LabGas Manager, 104 Karaokê Flow, 103 Karaokê Map, 102 Sopro, 101 Sentiment Analysis. Todos com `featured: true`.
 
 | # | Chave | Título PT | Status | Repo GitHub | Demo |
 |---|------|---------|--------|------------------|-----------|
-| 0 | `project.0` | LabGas Manager | concluido | https://github.com/cavalcanteprofissional/labgas-manager | https://labgas-manager.vercel.app/ |
+| 0 | `project.0` | LabGas Manager | concluido | https://github.com/cavalcanteprofissional/labgas-manager | https://labgas-manager.vercel.app |
 | 1 | `project.1` | Dashboard de Análise de Vendas | concluido | https://github.com/cavalcanteprofissional/dashboard_selling | https://dashboardselling-xguerbqzokekuhkezhgbdx.streamlit.app/ |
 | 2 | `project.2` | Chatbot de Oficina Automotiva | concluido | https://github.com/cavalcanteprofissional/chatbot_oficina | https://chatbotoficina-5c2dsw4ekk6cxkssjjxjbh.streamlit.app/ |
 | 3 | `project.3` | Dashboard de Reconhecimento Humano | concluido | https://github.com/cavalcanteprofissional/human_recognition | https://huggingface.co/spaces/CavalcanteProfissional/human_recognition |
@@ -132,17 +134,21 @@ Este documento contém todo o conteúdo textual do projeto, espelhando as chaves
 | 8 | `project.8` | ERP de Oficina Automotiva | andamento | https://github.com/cavalcanteprofissional/oficina-manager | https://oficina-manager.vercel.app/ |
 | 9 | `project.9` | Landing Page Paraiso Frames | andamento | https://github.com/cavalcanteprofissional/paraiso_frames | https://paraiso-frames.vercel.app/ |
 | 11 | `project.11` | Blog & CMS Portal de Notícias | andamento | https://github.com/cavalcanteprofissional/ceara-alternativo | https://ceara-alternativo.vercel.app/ |
-| 12 | `project.12` | Dashboard Sanova Micromedição | concluido | https://github.com/cavalcanteprofissional/sanova-micromedicao-dashboard- | https://sanova-micromedicao-dashboard-hlmw3spgxuthzebvxa7thg.streamlit.app/ |
+| 12 | `project.12` | Dashboard Sanova Micromedição | concluido | https://github.com/cavalcanteprofissional/sanova-micromedicao-dashboard | https://sanova-micromedicao-dashboard-hlmw3spgxuthzebvxa7thg.streamlit.app/ |
 | 13 | `project.13` | Pro Git QA Bot | concluido | https://github.com/cavalcanteprofissional/pro-git-qa-bot | https://pro-git-app-bot-owjnuwabjucpds3nannzwh.streamlit.app/ |
 | 14 | `project.14` | JobMatch AI | concluido | https://github.com/cavalcanteprofissional/jobmatch-ai | https://jobmatch-frontend-u6vt.onrender.com |
 | 15 | `project.15` | CD Price Tracker | andamento | https://github.com/cavalcanteprofissional/cd-price-tracker | # |
 | 16 | `project.16` | LinkTree Pessoal | concluido | https://github.com/cavalcanteprofissional/linktree-cavalcante | https://linktree-cavalcante.vercel.app/ |
+| 17 | `project.17` | Karaokê Flow | andamento | https://github.com/cavalcanteprofissional/karaoke-flow | https://karaoke-flow.vercel.app |
+| 18 | `project.18` | Karaokê Map | andamento | https://github.com/cavalcanteprofissional/karaoke-map | # |
+| 19 | `project.19` | Sopro | andamento | https://github.com/cavalcanteprofissional/sopro | # |
+| 20 | `project.20` | Sentiment Analysis | concluido | https://github.com/cavalcanteprofissional/sentiment-analysis | # |
 
 ### Projetos com Links
 
 | # | Projeto | Status | GitHub Repository | Live Demo |
 |---|---------|--------|------------------|-----------|
-| 0 | LabGas Manager | concluido | https://github.com/cavalcanteprofissional/labgas-manager | https://labgas-manager.vercel.app/ |
+| 0 | LabGas Manager | concluido | https://github.com/cavalcanteprofissional/labgas-manager | https://labgas-manager.vercel.app |
 | 1 | Dashboard de Análise de Vendas | concluido | https://github.com/cavalcanteprofissional/dashboard_selling | https://dashboardselling-xguerbqzokekuhkezhgbdx.streamlit.app/ |
 | 2 | Chatbot de Oficina Automotiva | concluido | https://github.com/cavalcanteprofissional/chatbot_oficina | https://chatbotoficina-5c2dsw4ekk6cxkssjjxjbh.streamlit.app/ |
 | 3 | Dashboard de Reconhecimento Humano | concluido | https://github.com/cavalcanteprofissional/human_recognition | https://huggingface.co/spaces/CavalcanteProfissional/human_recognition |
@@ -153,11 +159,15 @@ Este documento contém todo o conteúdo textual do projeto, espelhando as chaves
 | 8 | ERP de Oficina Automotiva | andamento | https://github.com/cavalcanteprofissional/oficina-manager | https://oficina-manager.vercel.app/ |
 | 9 | Landing Page Paraiso Frames | andamento | https://github.com/cavalcanteprofissional/paraiso_frames | https://paraiso-frames.vercel.app/ |
 | 11 | Blog & CMS Portal de Notícias | andamento | https://github.com/cavalcanteprofissional/ceara-alternativo | https://ceara-alternativo.vercel.app/ |
-| 12 | Dashboard Sanova Micromedição | concluido | https://github.com/cavalcanteprofissional/sanova-micromedicao-dashboard- | https://sanova-micromedicao-dashboard-hlmw3spgxuthzebvxa7thg.streamlit.app/ |
+| 12 | Dashboard Sanova Micromedição | concluido | https://github.com/cavalcanteprofissional/sanova-micromedicao-dashboard | https://sanova-micromedicao-dashboard-hlmw3spgxuthzebvxa7thg.streamlit.app/ |
 | 13 | Pro Git QA Bot | concluido | https://github.com/cavalcanteprofissional/pro-git-qa-bot | https://pro-git-app-bot-owjnuwabjucpds3nannzwh.streamlit.app/ |
 | 14 | JobMatch AI | concluido | https://github.com/cavalcanteprofissional/jobmatch-ai | https://jobmatch-frontend-u6vt.onrender.com |
 | 15 | CD Price Tracker | andamento | https://github.com/cavalcanteprofissional/cd-price-tracker | # |
 | 16 | LinkTree Pessoal | concluido | https://github.com/cavalcanteprofissional/linktree-cavalcante | https://linktree-cavalcante.vercel.app/ |
+| 17 | Karaokê Flow | andamento | https://github.com/cavalcanteprofissional/karaoke-flow | https://karaoke-flow.vercel.app |
+| 18 | Karaokê Map | andamento | https://github.com/cavalcanteprofissional/karaoke-map | # |
+| 19 | Sopro | andamento | https://github.com/cavalcanteprofissional/sopro | # |
+| 20 | Sentiment Analysis | concluido | https://github.com/cavalcanteprofissional/sentiment-analysis | # |
 
 ---
 
@@ -271,7 +281,7 @@ Este documento contém todo o conteúdo textual do projeto, espelhando as chaves
 |-------|-----|-----|-----|-------|
 | `stats.title` | Resultados | Results | Resultados | - |
 | `stats.years` | Anos de Experiência | Years of Experience | Años de Experiencia | 6+ |
-| `stats.projects` | Projetos Realizados | Projects Completed | Proyectos Realizados | 16+ |
+| `stats.projects` | Projetos Realizados | Projects Completed | Proyectos Realizados | 20+ |
 | `stats.clients` | Clientes Atendidos | Clients Served | Clientes Atendidos | 4+ |
 | `stats.certifications` | Certificações | Certifications | Certificaciones | 11+ |
 

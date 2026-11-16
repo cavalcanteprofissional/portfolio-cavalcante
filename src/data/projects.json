@@ -1,6 +1,66 @@
 {
   "projects": [
     {
+      "id": 0,
+      "titleKey": "project.0.title",
+      "descriptionKey": "project.0.description",
+      "tech": ["Python", "Flask", "Jinja2", "Supabase", "PostgreSQL", "Bootstrap", "Chart.js", "Vercel"],
+      "demoUrl": "https://labgas-manager.vercel.app",
+      "codeUrl": "https://github.com/cavalcanteprofissional/labgas-manager",
+      "icon": "testtube",
+      "featured": true,
+      "order": 105,
+      "status": "concluido"
+    },
+    {
+      "id": 17,
+      "titleKey": "project.17.title",
+      "descriptionKey": "project.17.description",
+      "tech": ["Next.js", "React", "TypeScript", "Supabase", "Tailwind CSS", "YouTube API", "shadcn/ui"],
+      "demoUrl": "https://karaoke-flow.vercel.app",
+      "codeUrl": "https://github.com/cavalcanteprofissional/karaoke-flow",
+      "icon": "video",
+      "featured": true,
+      "order": 104,
+      "status": "andamento"
+    },
+    {
+      "id": 18,
+      "titleKey": "project.18.title",
+      "descriptionKey": "project.18.description",
+      "tech": ["React", "TypeScript", "MapLibre", "Supabase", "Vite", "CSS"],
+      "demoUrl": "#",
+      "codeUrl": "https://github.com/cavalcanteprofissional/karaoke-map",
+      "icon": "map",
+      "featured": true,
+      "order": 103,
+      "status": "andamento"
+    },
+    {
+      "id": 19,
+      "titleKey": "project.19.title",
+      "descriptionKey": "project.19.description",
+      "tech": ["Python", "Whisper", "Speech-to-Text", "Windows", "RAG"],
+      "demoUrl": "#",
+      "codeUrl": "https://github.com/cavalcanteprofissional/sopro",
+      "icon": "book-open",
+      "featured": true,
+      "order": 102,
+      "status": "andamento"
+    },
+    {
+      "id": 20,
+      "titleKey": "project.20.title",
+      "descriptionKey": "project.20.description",
+      "tech": ["Python", "Transformers", "MLflow", "FastAPI", "Gradio", "Hugging Face"],
+      "demoUrl": "#",
+      "codeUrl": "https://github.com/cavalcanteprofissional/sentiment-analysis",
+      "icon": "brain",
+      "featured": true,
+      "order": 101,
+      "status": "concluido"
+    },
+    {
       "id": 16,
       "titleKey": "project.16.title",
       "descriptionKey": "project.16.description",
@@ -50,7 +110,7 @@
       "descriptionKey": "project.12.description",
       "tech": ["Python", "Streamlit", "Pandas", "NumPy", "Plotly", "Cohere API", "Poetry", "Pytest"],
       "demoUrl": "https://sanova-micromedicao-dashboard-hlmw3spgxuthzebvxa7thg.streamlit.app/",
-      "codeUrl": "https://github.com/cavalcanteprofissional/sanova-micromedicao-dashboard-",
+      "codeUrl": "https://github.com/cavalcanteprofissional/sanova-micromedicao-dashboard",
       "icon": "chart-line",
       "featured": true,
       "status": "concluido"
@@ -162,17 +222,6 @@
       "demoUrl": "https://dashboardselling-xguerbqzokekuhkezhgbdx.streamlit.app/",
       "codeUrl": "https://github.com/cavalcanteprofissional/dashboard_selling",
       "icon": "chart-line",
-      "featured": true,
-      "status": "concluido"
-    },
-    {
-      "id": 0,
-      "titleKey": "project.0.title",
-      "descriptionKey": "project.0.description",
-      "tech": ["Python", "Flask", "Jinja2", "Supabase"],
-      "demoUrl": "https://labgas-manager.vercel.app/",
-      "codeUrl": "https://github.com/cavalcanteprofissional/labgas-manager",
-      "icon": "testtube",
       "featured": true,
       "status": "concluido"
     }
